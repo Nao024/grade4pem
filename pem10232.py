@@ -225,7 +225,7 @@ def register_page():
             st.error("IDとパスワードを入力してください。")
         else:
             users[new_id] = new_pw
-            save_users(users)
+            save_users(users, commit_message=f"Add user {new_id}")
             st.success("登録が完了しました！ログイン画面に戻ります。")
             st.session_state.page = "login"
             st.rerun()
