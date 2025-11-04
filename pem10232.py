@@ -122,15 +122,56 @@ def append_line_to_repo_log(owner: str, repo: str, path: str, event_text: str):
 
 
 # ========== ユーザー管理 ==========
-def load_users():
-    if os.path.exists(USER_FILE):
-        with open(USER_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+def load_users() -> dict:
+    """
+    users.json をGitHubから読み込んで dict を返す。
+    ない場合は {} を返す。
+    """
+    existing = get_github_file(REPO_OWNER, REPO_NAME, USER_FILE_PATH)
+    if existing is None:
+        return {}
+    try:
+        decoded = base64.b64decode(existing["content"]).decode("utf-8")
+        data = json.loads(decoded)
+        if isinstance(data, dict):
+            return data
+        else:
+            st.warning("users.json が不正形式のため、空辞書として扱います。")
+            return {}
+    except Exception as e:
+        st.error(f"users.json の読み込みに失敗: {e}")
+        return {}
 
-def save_users(users):
-    with open(USER_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, indent=2, ensure_ascii=False)
+def save_users(users: dict, commit_message: str):
+    """
+    users(dict) を users.json に保存（新規 or 更新）
+    """
+    # 既存のSHAを取る
+    existing = get_github_file(REPO_OWNER, REPO_NAME, USER_FILE_PATH)
+    sha = existing["sha"] if existing is not None else None
+
+    json_text = json.dumps(users, ensure_ascii=False, indent=2) + "\n"
+    b64_updated = base64.b64encode(json_text.encode("utf-8")).decode("utf-8")
+
+    url = f"{GITHUB_API_BASE}/repos/{REPO_OWNER}/{REPO_NAME}/contents/{USER_FILE_PATH}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    #now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    payload = {
+        "message": f"{commit_message} at {timestamp_jst_iso()}",
+        "content": b64_updated,
+    }
+    if sha:
+        payload["sha"] = sha
+
+    r = requests.put(url, headers=headers, json=payload)
+    if r.status_code not in (200, 201):
+        st.error(f"GitHub API error (PUT {USER_FILE_PATH}): {r.status_code} {r.text}")
+    else:
+        st.success("users.json をGitHubに保存しました。")
+
 
 # ========== ログ記録 ==========
 def write_log(message):
