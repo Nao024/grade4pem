@@ -13,6 +13,9 @@ import os
 import json
 from datetime import datetime
 from openai import OpenAI
+import pytz
+import base64
+import requests
 
 # ========== 初期設定 ==========
 api_key = st.secrets["openai"]["api_key"]
@@ -20,6 +23,102 @@ client = OpenAI(api_key)
 USER_FILE = "users.json"
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
+
+##REPO_OWNER: アカウント名, REPO_NAME: リポジトリ名
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+REPO_OWNER = st.secrets["REPO_OWNER"]
+REPO_NAME  = st.secrets["REPO_NAME"]
+
+GITHUB_API_BASE = "https://api.github.com"
+
+USER_FILE_PATH = "users.json"
+
+LOG_DIR = "logs"
+
+def timestamp_jst_iso():
+    """日本時間(Asia/Tokyo)の現在時刻を返す"""
+    tz = pytz.timezone("Asia/Tokyo")
+    now = datetime.now(tz)
+    return now.strftime("%Y-%m-%d %H:%M:%S")
+
+def filename_timestamp_jst_iso():
+    """日本時間(Asia/Tokyo)の現在時刻を返す"""
+    tz = pytz.timezone("Asia/Tokyo")
+    now = datetime.now(tz)
+    return now.strftime("%Y%m%d_%H%M%S")
+# ========== GitHub 連携 ==========
+def get_github_file(owner: str, repo: str, path: str):
+    """
+    GitHub上のファイルを取得し、JSON(dict)を返す。
+    返り値の例:
+      {
+        "content": "<base64...>",
+        "sha": "...",
+        ...
+      }
+    ファイルがない場合は None を返す。
+    エラー時は st.error() で通知して None を返す。
+    """
+    url = f"{GITHUB_API_BASE}/repos/{owner}/{repo}/contents/{path}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        return r.json()
+    elif r.status_code == 404:
+        # まだ存在しない
+        return None
+    else:
+        st.error(f"GitHub API error (GET {path}): {r.status_code} {r.text}")
+        return None
+        
+def append_line_to_repo_log(owner: str, repo: str, path: str, event_text: str):
+    """
+    指定のevent_textを1行として、GitHub上の logs/app_log.txt に追記する。
+    仕組み:
+      1. いまのファイルをGET
+      2. デコードして末尾に event_text+"\n" を足す
+      3. 再エンコードして PUT でアップロード
+    新規ファイルの場合は、新しく作る。
+    """
+    # 1行分を "event_text" の形式で整える
+    #now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"{event_text}"
+
+    existing = get_github_file(owner, repo, path)
+
+    if existing is None:
+        # ファイルが存在しない場合は新規作成
+        updated_text = line + "\n"
+        sha = None
+    else:
+        # 既存ファイルあり -> もとのcontentを取り出して追記
+        b64_content = existing["content"]
+        decoded = base64.b64decode(b64_content).decode("utf-8")
+        updated_text = decoded + line + "\n"
+        sha = existing["sha"]
+
+    # base64エンコード
+    b64_updated = base64.b64encode(updated_text.encode("utf-8")).decode("utf-8")
+
+    # PUTで更新
+    url = f"{GITHUB_API_BASE}/repos/{owner}/{repo}/contents/{path}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "message": f"Append log at {timestamp_jst_iso()}",
+        "content": b64_updated,
+    }
+    if sha:
+        payload["sha"] = sha  # 既存ファイル更新時に必須
+
+    r = requests.put(url, headers=headers, json=payload)
+
+    if r.status_code not in (200, 201):
+        st.error(f"GitHub API error (PUT {path}): {r.status_code} {r.text}")
+
 
 # ========== ユーザー管理 ==========
 def load_users():
