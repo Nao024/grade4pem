@@ -1,3 +1,5 @@
 streamlit
 pytz
 requests
+openai>=1.0.0
+
