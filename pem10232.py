@@ -15,7 +15,8 @@ from datetime import datetime
 from openai import OpenAI
 
 # ========== 初期設定 ==========
-client = OpenAI(api_key="APIキー入力")
+api_key = st.secrets["openai"]["api_key"]
+client = OpenAI(api_key)
 USER_FILE = "users.json"
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
