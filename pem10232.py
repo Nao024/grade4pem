@@ -175,8 +175,8 @@ def save_users(users: dict, commit_message: str):
 # ========== ログ記録 ==========
 def write_log(message):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_path = os.path.join(LOG_DIR, "IDlogin.txt")
-    with open(log_path, "a", encoding="utf-8") as f:
+    remote_log_path = os.path.join(LOG_DIR, "IDlogin.txt")
+    with open(remote_log_path, "a", encoding="utf-8") as f:
         f.write(f"[{now}] {message}\n")
 
 # ========== ログイン機能 ==========
