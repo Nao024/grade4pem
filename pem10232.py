@@ -338,7 +338,7 @@ def main_page():
                 msg += result
                 
                 # ローカル保存
-                with open(log_path, "w", encoding="utf-8") as f:
+                with open(remote_log_path, "w", encoding="utf-8") as f:
                     f.write(msg)
                     
                 # GitHubにも追記
