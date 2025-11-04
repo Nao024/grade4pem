@@ -198,7 +198,8 @@ def login_page():
         if id_input in users and users[id_input] == pw_input:
             st.session_state.page = "main"
             st.session_state.user_id = id_input
-            write_log(f"ログイン: {id_input}")
+            remote_log_path = LOG_DIR + "/IDlogin.txt"
+            append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, f"[{timestamp_jst_iso()}] ログイン: {id_input}")
             st.success(f"{id_input} さん、ようこそ！")
             st.rerun()
         else:
@@ -239,7 +240,8 @@ def register_page():
 def main_page():
     st.sidebar.write(f"👤 ログイン中: {st.session_state.user_id}")
     if st.sidebar.button("ログアウト"):
-        write_log(f"ログアウト: {st.session_state.user_id}")
+        remote_log_path = remote_log_path = LOG_DIR + "/IDlogin.txt"
+        append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, f"[{timestamp_jst_iso()}] ログアウト: {st.session_state.user_id}")
         st.session_state.page = "login"
         st.session_state.user_id = None
         st.warning("ログアウトしました。")
@@ -318,7 +320,7 @@ def main_page():
                 st.markdown(result)
 
                 # --- ログ記録（解析結果も） ---
-                log_path = os.path.join(LOG_DIR, f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{st.session_state.user_id}.txt")
+                remote_log_path = LOG_DIR + f"/log_{filename_timestamp_jst_iso()}.txt
                 with open(log_path, "w", encoding="utf-8") as f:
                     f.write(f"[ユーザー]: {st.session_state.user_id}\n")
                     f.write(f"[日時]: {datetime.now()}\n\n")
@@ -337,7 +339,7 @@ def main_page():
                     f.write(f"{selected_prompt}\n\n")
                     f.write("=== 解析結果 ===\n")
                     f.write(result)
-                    append_line_to_repo_log(REPO_OWNER, REPO_NAME, LOG_DIR, msg)
+                    append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
 
             except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
