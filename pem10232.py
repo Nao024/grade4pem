@@ -18,8 +18,7 @@ import base64
 import requests
 
 # ========== 初期設定 ==========
-api_key = st.secrets["openai"]["api_key"]
-client = OpenAI(api_key)
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 USER_FILE = "users.json"
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
