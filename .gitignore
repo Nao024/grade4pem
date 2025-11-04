@@ -6,4 +6,3 @@ venv/
 users.json
 .streamlit/
 *.DS_Store
-.streamlit/secrets.toml
