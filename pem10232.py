@@ -320,26 +320,29 @@ def main_page():
                 st.markdown(result)
 
                 # --- ログ記録（解析結果も） ---
-                remote_log_path = LOG_DIR + f"/log_{filename_timestamp_jst_iso()}.txt
+                remote_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
+                msg = f"[ユーザー]: {st.session_state.user_id}\n"
+                msg += f"[日時]: {datetime.now()}\n\n"
+                msg += "=== 入力情報 ===\n"
+                program_names = [p.name for p in program] if program else []
+                test_names = [t.name for t in testcase] if testcase else []
+                msg += f"[プログラムファイル]: {', '.join(program_names)}\n"
+                msg += f"[テストファイル]: {', '.join(test_names) or 'なし'}\n"
+                msg += f"PEM:\n{pem_text}\n\n"
+                msg += f"[テスト有無]: {test_opt}\n"
+                msg += f"[エラー数指定]: {error_opt}\n"
+                msg += f"[解説レベル]: {level_opt}\n"
+                msg += "=== プロンプト ===\n"
+                msg += f"{selected_prompt}\n\n"
+                msg += "=== 解析結果 ===\n"
+                msg += result
+                
+                # ローカル保存
                 with open(log_path, "w", encoding="utf-8") as f:
-                    f.write(f"[ユーザー]: {st.session_state.user_id}\n")
-                    f.write(f"[日時]: {datetime.now()}\n\n")
-                    f.write("=== 入力情報 ===\n")
-                    program_names = [p.name for p in program] if program else []
-                    test_names = [t.name for t in testcase] if testcase else []
-                    f.write(f"[プログラムファイル]: {', '.join(program_names)}\n")
-                    f.write(f"[テストファイル]: {', '.join(test_names) or 'なし'}\n")
-                    f.write(f"PEM:\n{pem_text}\n\n")
-                    f.write(f"[プログラム]: {', '.join(program_names)} \n")
-                    f.write(f"[テストケース]: {', '.join(test_names)}\n" )
-                    f.write(f"[テスト有無]: {test_opt}\n")
-                    f.write(f"[エラー数指定]: {error_opt}\n")
-                    f.write(f"[解説レベル]: {level_opt}\n")
-                    f.write("=== プロンプト ===\n")
-                    f.write(f"{selected_prompt}\n\n")
-                    f.write("=== 解析結果 ===\n")
-                    f.write(result)
-                    append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
+                    f.write(msg)
+                    
+                # GitHubにも追記
+                append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
 
             except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
