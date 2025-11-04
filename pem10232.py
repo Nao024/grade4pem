@@ -339,6 +339,8 @@ def main_page():
                     f.write("=== 解析結果 ===\n")
                     f.write(result)
 
+            append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
+
             except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
 
