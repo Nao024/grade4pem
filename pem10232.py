@@ -240,7 +240,7 @@ def register_page():
 def main_page():
     st.sidebar.write(f"👤 ログイン中: {st.session_state.user_id}")
     if st.sidebar.button("ログアウト"):
-        remote_log_path = remote_log_path = LOG_DIR + "/IDlogin.txt"
+        remote_log_path = f"{LOG_DIR}/IDlogin.txt"
         append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, f"[{timestamp_jst_iso()}] ログアウト: {st.session_state.user_id}")
         st.session_state.page = "login"
         st.session_state.user_id = None
@@ -320,7 +320,10 @@ def main_page():
                 st.markdown(result)
 
                 # --- ログ記録（解析結果も） ---
-                remote_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
+                timestamp = filename_timestamp_jst_iso()
+                remote_log_path = os.path.join(LOG_DIR, f"log_{timestamp}.txt")
+                github_log_path = f"logs/log_{timestamp}.txt"
+                
                 msg = f"[ユーザー]: {st.session_state.user_id}\n"
                 msg += f"[日時]: {datetime.now()}\n\n"
                 msg += "=== 入力情報 ===\n"
@@ -340,11 +343,9 @@ def main_page():
                 # ローカル保存
                 with open(remote_log_path, "w", encoding="utf-8") as f:
                     f.write(msg)
-
-                github_log_path = f"logs/log_{timestamp}.txt"
                 
                 # GitHubにも追記
-                append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
+                append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
 
             except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
