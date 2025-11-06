@@ -340,7 +340,9 @@ def main_page():
                 # ローカル保存
                 with open(remote_log_path, "w", encoding="utf-8") as f:
                     f.write(msg)
-                    
+
+                github_log_path = f"logs/log_{timestamp}.txt"
+                
                 # GitHubにも追記
                 append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
 
