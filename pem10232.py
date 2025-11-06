@@ -11,7 +11,7 @@ import requests
 # ========== 初期設定 ==========
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 USER_FILE = "users.json"
-LOG_DIR = "logs"
+LOG_DIR = "log"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 ##REPO_OWNER: アカウント名, REPO_NAME: リポジトリ名
