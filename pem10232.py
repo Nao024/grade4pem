@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
+import os
 import json
 from datetime import datetime
 from openai import OpenAI
