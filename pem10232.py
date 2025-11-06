@@ -322,7 +322,6 @@ def main_page():
                 # --- ログ記録（解析結果も） ---
                 timestamp = filename_timestamp_jst_iso()
                 remote_log_path = os.path.join(LOG_DIR, f"log_{timestamp}.txt")
-                github_log_path = f"logs/log_{timestamp}.txt"
                 
                 msg = f"[ユーザー]: {st.session_state.user_id}\n"
                 msg += f"[日時]: {datetime.now()}\n\n"
@@ -345,7 +344,7 @@ def main_page():
                     f.write(msg)
                 
                 # GitHubにも追記
-                append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
+                append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
 
             except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
