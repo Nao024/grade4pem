@@ -311,8 +311,7 @@ def main_page():
                 st.markdown(result)
 
                 # --- ログ記録（解析結果も） ---
-                timestamp = filename_timestamp_jst_iso()
-                remote_log_path = os.path.join(LOG_DIR, f"log_{timestamp}.txt")
+                remote_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
                 
                 msg = f"[ユーザー]: {st.session_state.user_id}\n"
                 msg += f"[日時]: {datetime.now()}\n\n"
@@ -331,8 +330,8 @@ def main_page():
                 msg += result
                 
                 # ローカル保存
-                with open(remote_log_path, "w", encoding="utf-8") as f:
-                    f.write(msg)
+                #with open(remote_log_path, "w", encoding="utf-8") as f:
+                    #f.write(msg)
                 
                 # GitHubにも追記
                 append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
