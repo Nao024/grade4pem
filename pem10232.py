@@ -342,7 +342,3 @@ elif st.session_state.page == "register":
     register_page()
 elif st.session_state.page == "main":
     main_page()
-
-USER_FILE = "users.json"
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
