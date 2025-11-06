@@ -165,7 +165,7 @@ def save_users(users: dict, commit_message: str):
 
 # ========== ログ記録 ==========
 def write_log(message):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = timestamp_jst_iso()
     github_log_path = os.path.join(LOG_DIR, "IDlogin.txt")
     with open(github_log_path, "a", encoding="utf-8") as f:
         f.write(f"[{now}] {message}\n")
@@ -314,7 +314,7 @@ def main_page():
                 github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
                 
                 msg = f"[ユーザー]: {st.session_state.user_id}\n"
-                msg += f"[日時]: {datetime.now()}\n\n"
+                msg += f"[日時]: {timestamp_jst_iso()}\n\n"
                 msg += "=== 入力情報 ===\n"
                 program_names = [p.name for p in program] if program else []
                 test_names = [t.name for t in testcase] if testcase else []
