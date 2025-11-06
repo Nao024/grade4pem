@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
-import os
 import json
 from datetime import datetime
 from openai import OpenAI
@@ -328,10 +327,6 @@ def main_page():
                 msg += f"{selected_prompt}\n\n"
                 msg += "=== 解析結果 ===\n"
                 msg += result
-                
-                # ローカル保存
-                #with open(remote_log_path, "w", encoding="utf-8") as f:
-                    #f.write(msg)
                 
                 # GitHubにも追記
                 append_line_to_repo_log(REPO_OWNER, REPO_NAME, remote_log_path, msg)
