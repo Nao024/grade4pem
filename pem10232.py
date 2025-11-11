@@ -243,8 +243,8 @@ def main_page():
     # --- 入力エリア ---
     st.header("① ファイルと情報の入力")
     program = st.file_uploader("Javaプログラム（.java）をアップロード", type=["java"], accept_multiple_files=True)
-    testcase = st.file_uploader("テストケース（任意）", type=["java"], accept_multiple_files=True)
-    pem_text = st.text_area("PEMの内容（任意）：実行結果やエラーメッセージを入力")
+    testcase = st.file_uploader("テストケース（任意）をアップロード", type=["java"], accept_multiple_files=True)
+    pem = st.text_area("PEMの内容（任意）をアップロード", type=["txt"], accept_multiple_files=True)
 
     # --- 条件選択 ---
     st.header("② 条件を選択")
@@ -292,9 +292,9 @@ def main_page():
 
             program_text = "".join(f"\n\n【{p.name}】\n{p.read().decode('utf-8')}" for p in program)
             testcase_text = "".join(f"\n\n【{t.name}】\n{t.read().decode('utf-8')}" for t in testcase) if testcase else ""
-            pem_info = f"\n\n【PEM内容】\n{pem_text}" if pem_text else ""
+            pem_text = "".join(f"\n\n【{pem.name}】\n{t.read().decode('utf-8')}" for t in testcase) if testcase else ""
 
-            full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}{pem_info}"
+            full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
 
             try:
                 response = client.chat.completions.create(
@@ -320,7 +320,7 @@ def main_page():
                 test_names = [t.name for t in testcase] if testcase else []
                 msg += f"[プログラムファイル]: {', '.join(program_names)}\n"
                 msg += f"[テストファイル]: {', '.join(test_names) or 'なし'}\n"
-                msg += f"PEM:\n{pem_text}\n\n"
+                msg += f"PEM: {', '.join(pem_names) or 'なし'}\n"
                 msg += f"[テスト有無]: {test_opt}\n"
                 msg += f"[エラー数指定]: {error_opt}\n"
                 msg += f"[解説レベル]: {level_opt}\n"
