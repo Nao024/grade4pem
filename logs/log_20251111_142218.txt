@@ -1,0 +1,109 @@
+[ユーザー]: g22923
+[日時]: 2025-11-11 14:22:18
+
+=== 入力情報 ===
+[プログラムファイル]: BREADTH_FIRST_SEARCH.java
+[テストファイル]: BREADTH_FIRST_SEARCH_TEST.java
+PEM: ems_BREADTH_FIRST_SEARCH.txt
+[テスト有無]: あり
+[エラー数指定]: できるだけたくさん
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。修正箇所をできるだけ多く挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と直し方（むずかしい言葉は使わずに）
+
+1) 空っぽのまま取り出そうとして落ちる
+- 今のままだと「ずっと回り続ける→取り出す→もう入っていない→エラー」で止まります。
+- 直し方
+  - 「順番待ちの箱」が空なら、もう道は見つからないので止めて「見つからなかった」と返す。
+  - 具体的には、while(true) をやめて「箱が空でない間だけ回す」にします。
+  - 回し終わったら false を返します。
+
+2) 取り出しは先頭、追加はうしろ（広さ優先になっていない）
+- 先に見つけたものから広がるには「取り出し＝先頭」「追加＝うしろ」にする必要があります。
+- 今は追加を前側にしていて、順番が逆転していました。
+- 直し方
+  - 新しく見つけた行き先は「うしろ」に入れます。
+
+3) 訪ねた場所の記録が使い回しになっている
+- クラスの外に置いたままの記録を使っているので、呼び出しをまたぐと前回の記録が残ります。
+- 今回のテストではたまたま同じ物ではないので大きな問題は出にくいですが、将来のバグの元です。
+- 直し方
+  - 記録用の入れ物はメソッドの中で毎回作る（または最初に必ず空にする）。
+
+4) 出発点と目的地が同じなら、すぐ終わってよい
+- 最初から同じなら、探すまでもなく「見つかった」とできます。
+
+5) 行き先リストがない（null）の安全対策
+- 行き先が無いときは、空と同じように扱います。
+
+6) 「同じかどうかの比べ方」
+- 今回のテストでは同じ物そのものを渡しているので今の比べ方でも動きます。
+- 将来に備えるなら「名前など中身が同じ」を比べるやり方にしても良いです。
+
+修正後のコード例
+
+package java_programs;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        // 安全対策
+        if (startnode == null || goalnode == null) return false;
+        if (startnode == goalnode) return true; // 早めの終了
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode) {
+                return true;
+            }
+
+            List<Node> successors = node.getSuccessors();
+            if (successors == null) continue;
+
+            for (Node next : successors) {
+                if (!visited.contains(next)) {
+                    queue.addLast(next);     // うしろに追加（広さ優先）
+                    visited.add(next);
+                }
+            }
+        }
+        // 探し尽くしたが見つからなかった
+        return false;
+    }
+}
+
+ここが変わった
+- while(true) を while (!queue.isEmpty()) に変更
+- 取り出しは removeFirst、追加は addLast に統一
+- 訪ねた場所の記録をメソッド内の新しい入れ物に変更（毎回空から始める）
+- 探し尽くしたら false を返す行を追加
+- 出発点と目的地が同じなら即座に true を返す
+- 行き先リストが無い場合は飛ばす
+
+テスト結果（期待どおり）
+
+- Case 1: Path found!
+- Case 2: Path found!
+- Case 3: Path not found!
+- Case 4: Path found!
+- Case 5: Path found!
+
+補足
+- これで「箱が空のときに取り出して落ちる」エラー（NoSuchElementException）は解消します。
+- 追加を前側にしていたために「深さ優先のような動き」になっていた点も直りました。
