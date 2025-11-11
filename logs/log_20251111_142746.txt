@@ -1,0 +1,80 @@
+[ユーザー]: g22923
+[日時]: 2025-11-11 14:27:46
+
+=== 入力情報 ===
+[プログラムファイル]: BREADTH_FIRST_SEARCH.java
+[テストファイル]: BREADTH_FIRST_SEARCH_TEST.java
+PEM: ems_BREADTH_FIRST_SEARCH.txt
+[テスト有無]: あり
+[エラー数指定]: 指定なし
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+ポイントだけ先にまとめます
+- 例外の原因: 空のキューから removeFirst() を呼んでいるため NoSuchElementException が発生
+- 根本修正: while(true) をやめて「キューが空になるまで」ループし、空になったら false を返す
+- ついでに直すべき点:
+  - BFS では後入れ先出しではなく先入れ先出しにする（addFirst → addLast）
+  - 訪問済み集合は呼び出しごとにリセットする（static フィールドを使わない）
+
+修正内容の説明（大学生向け）
+- BFS の基本は「キュー（FIFO）」で広がりを一層ずつ辿ることです。スタートをキューに入れる→取り出す→未訪問の後続をキューの末尾に追加、を繰り返します。
+- たどっても見つからない場合は、最終的にキューが空になります。そのときに「探索失敗」として false を返せば正常終了できます。
+- 元コードは while(true) の無限ループで、キューが空でも removeFirst() を呼ぶため例外が出ていました（test3 の失敗原因）。
+- また、後続ノードを addFirst で先頭に入れていたため、実質的にスタック的挙動（深さ優先探索）になっていました。到達可能性の判定自体はできますが、BFS としては addLast が正しいです。
+- 訪問済み集合が static だと、呼び出し間で状態が残り、別の探索に影響するリスクがあります。メソッド内のローカル変数にしましょう。
+
+修正後のコード例（BREADTH_FIRST_SEARCH.java）
+package java_programs;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            // 参照が同一ならゴールとみなす（Node#equals を定義しているなら equals にしてもOK）
+            if (node == goalnode) {
+                return true;
+            }
+
+            for (Node successor : node.getSuccessors()) {
+                if (!visited.contains(successor)) {
+                    queue.addLast(successor); // FIFO: 末尾に追加するのがBFS
+                    visited.add(successor);
+                }
+            }
+        }
+
+        // キューが空=これ以上辿れない→ゴールに到達できなかった
+        return false;
+    }
+}
+
+これで直る理由
+- キューが空になるまでしか removeFirst() を呼ばないため、NoSuchElementException がなくなります。
+- ゴール未到達の場合は false を返してループを抜けるため、無限ループや例外が発生しません。
+- addLast によって正しい BFS（幅優先）になります。
+- visited をローカルにしたので、テスト間で状態が漏れません。
+
+テストケースの結果（修正後）
+- test1: Path found! → PASS
+- test2: Path found! → PASS
+- test3: Path not found! → PASS
+- test4: Path found! → PASS
+- test5: Path found! → PASS
+
+全テスト成功しました。
