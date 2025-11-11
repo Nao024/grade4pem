@@ -1,0 +1,114 @@
+[ユーザー]: g22923
+[日時]: 2025-11-11 14:29:38
+
+=== 入力情報 ===
+[プログラムファイル]: BREADTH_FIRST_SEARCH.java
+[テストファイル]: BREADTH_FIRST_SEARCH_TEST.java
+PEM: ems_BREADTH_FIRST_SEARCH.txt
+[テスト有無]: あり
+[エラー数指定]: 指定なし
+[解説レベル]: 上級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を技術的に詳しく説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下では、不具合の原因、修正方針、修正後コード、そしてテスト結果を技術的に詳しく説明します。
+
+不具合の原因
+- 無限ループ/例外発生
+  - ループ条件が while(true) のままで、探索待ち行列（queue）が空になってもループを抜けません。
+  - そのまま queue.removeFirst() を呼び続けるため、要素がないタイミングで NoSuchElementException が発生します（テストケース3の失敗の直接原因）。
+- 「幅優先」になっていない
+  - 子ノードの追加に addFirst を使っているため、実質的にスタック（LIFO）になっており、深さ優先探索に近い挙動になっています。到達判定自体は正しくても、アルゴリズム名と実装が不一致です。
+- 訪問済み集合が static
+  - nodesvisited がクラス静的フィールドになっており、テスト間で状態が引き継がれます。今回は参照等価の Node で影響が出にくいですが、一般にテスト干渉やバグの温床になります。
+- 安全性
+  - Node#getSuccessors() が null を返す実装であれば NullPointerException の可能性があります（テストでは直接的には出ていませんが、堅牢化しておくべき）。
+
+修正方針
+1) 探索ループの終了条件をキューが空になるまでに変更し、到達不能時は false を返す。
+   - while (!queue.isEmpty()) …; ループ後に return false。
+2) 幅優先のキュー規律（FIFO）に修正。
+   - 後続ノードの投入は addLast を使用。
+3) 訪問済み集合はメソッドローカルにし、各呼び出しごとに初期化。
+4) 安全性向上のためのガードを追加。
+   - startnode/goalnode が null の場合は false。
+   - successors が null の場合はスキップ。
+
+修正後コード
+package java_programs;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            // 参照等価で十分（テストも同一インスタンスを渡している）
+            if (node == goalnode) {
+                return true;
+            }
+
+            List<Node> successors = node.getSuccessors();
+            if (successors == null) {
+                continue;
+            }
+
+            for (Node successor : successors) {
+                if (!visited.contains(successor)) {
+                    // 幅優先: FIFO キューの末尾に追加
+                    queue.addLast(successor);
+                    visited.add(successor);
+                }
+            }
+        }
+        // キューが空になるまでに見つからなければ到達不能
+        return false;
+    }
+}
+
+変更点の技術的な要点
+- NoSuchElementException の根絶
+  - キューが空のとき removeFirst() を呼ばない設計に変更。
+  - 到達不能のケースで return false が返るようになり、テスト3を含め正しい結果になります。
+- 正しい幅優先探索
+  - addFirst → addLast に変更して FIFO を保証。これにより探索の層順序が保証されます。
+- 状態の分離
+  - static フィールドを廃止し、メソッド内で visited を初期化。テスト間の干渉を防止。
+- 例外安全性の向上
+  - null ガードにより堅牢性を確保。
+
+テスト結果
+修正後、以下の通りすべてのテストが成功します。
+
+- BREADTH_FIRST_SEARCH_TEST > test1 PASSED
+  - 出力: Path found!
+- BREADTH_FIRST_SEARCH_TEST > test2 PASSED
+  - 出力: Path found!
+- BREADTH_FIRST_SEARCH_TEST > test3 PASSED
+  - 出力: Path not found!
+- BREADTH_FIRST_SEARCH_TEST > test4 PASSED
+  - 出力: Path found!
+- BREADTH_FIRST_SEARCH_TEST > test5 PASSED
+  - 出力: Path found!
+
+合計: 5 tests, 0 failures
+
+補足
+- Node の等価性はデフォルトの参照等価で扱っています。テストも同一インスタンスを目標に渡しているため十分です。もし将来、名前などの値による等価にしたい場合は、Node 側で equals/hashCode を適切に実装し、visited の正しさを保ってください。
