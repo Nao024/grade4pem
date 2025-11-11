@@ -244,7 +244,7 @@ def main_page():
     st.header("① ファイルと情報の入力")
     program = st.file_uploader("Javaプログラム（.java）をアップロード", type=["java"], accept_multiple_files=True)
     testcase = st.file_uploader("テストケース（任意）をアップロード", type=["java"], accept_multiple_files=True)
-    pem = st.text_area("PEMの内容（任意）をアップロード", type=["txt"], accept_multiple_files=True)
+    pem = st.file_uploader("PEMファイル（任意）をアップロード", type=["txt"], accept_multiple_files=True)
 
     # --- 条件選択 ---
     st.header("② 条件を選択")
@@ -292,7 +292,8 @@ def main_page():
 
             program_text = "".join(f"\n\n【{p.name}】\n{p.read().decode('utf-8')}" for p in program)
             testcase_text = "".join(f"\n\n【{t.name}】\n{t.read().decode('utf-8')}" for t in testcase) if testcase else ""
-            pem_text = "".join(f"\n\n【{pem.name}】\n{t.read().decode('utf-8')}" for t in testcase) if testcase else ""
+            pem_text = "".join(f"\n\n【{pem.name}】\n{p.read().decode('utf-8')}" for p in pem) if pem else ""
+
 
             full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
 
