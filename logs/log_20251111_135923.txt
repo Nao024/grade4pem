@@ -1,0 +1,78 @@
+[ユーザー]: g22923
+[日時]: 2025-11-11 13:59:23
+
+=== 入力情報 ===
+[プログラムファイル]: BREADTH_FIRST_SEARCH.java
+[テストファイル]: BREADTH_FIRST_SEARCH_TEST.java
+PEM:
+BREADTH_FIRST_SEARCH_TEST > test3 FAILED
+    java.util.NoSuchElementException
+        at java.base/java.util.ArrayDeque.removeFirst(ArrayDeque.java:361)
+        at java_programs.BREADTH_FIRST_SEARCH.breadth_first_search(BREADTH_FIRST_SEARCH.java:25)
+        at java_testcases.junit.BREADTH_FIRST_SEARCH_TEST.test3(BREADTH_FIRST_SEARCH_TEST.java:73)
+
+[テスト有無]: あり
+[エラー数指定]: １つだけ
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+ポイント
+- 最重要の不具合: while(true) と queue.removeFirst() の組合せにより、到達不能の場合にキューが空になっても無限ループ（実際は NoSuchElementException）になる。これが test3 の失敗原因。
+- 修正方針: キューが空でない間だけ処理し、探索が尽きたら false を返す。これで「到達できない」ケースを正しく扱える。
+
+修正コード例（最小修正＋実用上の改善）
+- 変更点
+  - while (!queue.isEmpty()) に変更
+  - 探索が尽きたら return false を追加
+  - BFSのキュー操作は addLast を使う（先入れ先出し）
+  - テスト間の副作用を避けるため、nodesvisited をメソッド冒頭で clear
+
+BREADTH_FIRST_SEARCH.java の breadth_first_search を以下に置き換えてください。
+
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    // テスト間の汚染防止
+    nodesvisited.clear();
+
+    if (startnode == null || goalnode == null) return false;
+
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+    nodesvisited.add(startnode);
+
+    // キューが空でない間だけループ
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        } else {
+            for (Node successor_node : node.getSuccessors()) {
+                if (!nodesvisited.contains(successor_node)) {
+                    // BFS は末尾に追加
+                    queue.addLast(successor_node);
+                    nodesvisited.add(successor_node);
+                }
+            }
+        }
+    }
+    // 探索が尽きた＝到達不可能
+    return false;
+}
+
+なぜこれで直るのか
+- 到達可能なとき: どこかで node == goalnode が真になり、true を返す。
+- 到達不可能なとき: すべての到達可能ノードを取り尽くすとキューが空になる。while の条件が偽になり、ループを抜けて false を返す。removeFirst が空キューで呼ばれないため、NoSuchElementException は起こらない。
+- addLast に統一したことで、正しい幅優先順序（レベル順）で探索され、期待どおりの BFS になる。
+- nodesvisited を clear することで、静的フィールドの状態がテスト間に持ち越される問題を防げる。
+
+テストケース結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+
+補足（任意の改善）
+- Node の等価性が名前ベースで実装されている場合、静的な nodesvisited を使う設計は特にテスト間干渉を招きやすいです。インスタンスメソッド化して都度新しい visited セットを使うか、今回のようにメソッド冒頭で clear しましょう。
