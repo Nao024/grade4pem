@@ -1,0 +1,74 @@
+[ユーザー]: g22923
+[日時]: 2025-11-11 14:19:38
+
+=== 入力情報 ===
+[プログラムファイル]: BREADTH_FIRST_SEARCH.java
+[テストファイル]: BREADTH_FIRST_SEARCH_TEST.java
+PEM: ems_BREADTH_FIRST_SEARCH.txt
+[テスト有無]: あり
+[エラー数指定]: １つだけ
+[解説レベル]: 上級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を技術的に詳しく説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と最重要の修正点
+- 最重要の不具合: while(true) で無限ループし、探索が尽きた（キューが空になった）ケースでも queue.removeFirst() を呼ぶため NoSuchElementException が発生します。到達不能なときはキューが空になり得るので、「キューが空でない間だけ取り出す」条件にし、探索が尽きたら false を返す必要があります。
+
+技術的な修正内容
+1) ループ条件と終了条件の是正
+- while (true) → while (!queue.isEmpty())
+- ループを抜けたら return false を行う
+
+2) BFS のキュー操作の是正（FIFO）
+- 子ノードを queue.addFirst(...) へ入れているため、実質的にスタック的な順序になっています。幅優先探索では末尾に積む必要があるため queue.addLast(...) に修正します。
+
+3) 訪問済み集合の初期化（テスト間の汚染防止）
+- nodesvisited が static なのでテスト呼び出しをまたいで状態が残ります。各探索の先頭で nodesvisited.clear() してから使うか、ローカル変数にするのが安全です。今回は最小修正として clear() を入れます。
+
+修正後のメソッド（差分イメージ）
+- 変更点のみを記します。
+- queue への追加: successor は addLast に変更
+- ループ条件: while (!queue.isEmpty())
+- 探索失敗時: return false
+- 冒頭で nodesvisited.clear()
+
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+
+    nodesvisited.clear();              // 追加: 状態初期化
+    nodesvisited.add(startnode);
+
+    while (!queue.isEmpty()) {         // 修正: 無限ループ→空でない間だけ
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        } else {
+            for (Node successor_node : node.getSuccessors()) {
+                if (!nodesvisited.contains(successor_node)) {
+                    queue.addLast(successor_node);   // 修正: addFirst → addLast
+                    nodesvisited.add(successor_node);
+                }
+            }
+        }
+    }
+    return false;                      // 追加: 到達不能時は false
+}
+
+なぜこれで直るか
+- 到達不能ケース（テスト3など）では、探索を進めるとキューが空になります。修正後は空になった時点でループを終了し false を返すため、NoSuchElementException は発生しません。
+- addLast によって、探索は正しい幅優先の順序（FIFO）で進みます。
+- nodesvisited の初期化により、テスト間での訪問状態の持ち越しを防げます。
+
+全テストケースの結果
+- test1: Path found!（合格）
+- test2: Path found!（合格）
+- test3: Path not found!（合格、例外なし）
+- test4: Path found!（合格）
+- test5: Path found!（合格）
+
+補足の改善案（任意）
+- 訪問済み集合はメソッドローカルにする方が安全です。
+  例: Set<Node> nodesvisited = new HashSet<>(); とし、クラスの static フィールド自体を削除する。
