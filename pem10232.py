@@ -292,7 +292,7 @@ def main_page():
 
             program_text = "".join(f"\n\n【{p.name}】\n{p.read().decode('utf-8')}" for p in program)
             testcase_text = "".join(f"\n\n【{t.name}】\n{t.read().decode('utf-8')}" for t in testcase) if testcase else ""
-            pem_text = "".join(f"\n\n【{pem.name}】\n{p.read().decode('utf-8')}" for p in pem) if pem else ""
+            pem_text = "".join(f"\n\n【{pe.name}】\n{p.read().decode('utf-8')}" for pe in pem) if pem else ""
 
 
             full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
@@ -319,6 +319,7 @@ def main_page():
                 msg += "=== 入力情報 ===\n"
                 program_names = [p.name for p in program] if program else []
                 test_names = [t.name for t in testcase] if testcase else []
+                pem_names = [pe.name for pe in pem] if pem else []
                 msg += f"[プログラムファイル]: {', '.join(program_names)}\n"
                 msg += f"[テストファイル]: {', '.join(test_names) or 'なし'}\n"
                 msg += f"PEM: {', '.join(pem_names) or 'なし'}\n"
