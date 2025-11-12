@@ -1,0 +1,73 @@
+[ユーザー]: g22954
+[日時]: 2025-11-12 19:12:26
+
+=== 入力情報 ===
+[プログラムファイル]: KNAPSACK.java
+[テストファイル]: KNAPSACK_TEST.java
+PEM: ems_KNAPSACK.txt
+[テスト有無]: あり
+[エラー数指定]: １つだけ
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と直し方（最重要ポイント）
+- 最重要のバグは、アイテムを入れられるかどうかの判定で不等号が厳しすぎることです。
+  - 現在: weight < j
+  - 正しくは: weight <= j
+- 0/1ナップサックでは「容量 j に対して重さ weight のアイテムがちょうど入る（j == weight）」場合も、そのアイテムを選べるべきです。ところが < を使うと、このちょうどのケースが全て排除され、最適値が過小評価されます。
+- これが原因で、例えば test_1（容量40で重さ10と30を同時に入れたい）や test_3（7+11+8=26を入れたい）など、ジャストフィットの組合せが無視され、期待値より小さい結果になっていました。
+
+修正コード（差分のイメージ）
+- KNAPSACK.knapsack の中の条件分岐を1箇所だけ変更します。
+
+変更前:
+else if (weight < j) {
+
+変更後:
+else if (weight <= j) {
+
+参考: 全体像（抜粋）
+public static int knapsack(int capacity, int [][] items) {
+    int weight = 0, value = 0;
+    int n = items.length;
+    int memo[][] = new int[n + 1][capacity + 1];
+
+    for (int i = 0; i <= n ; i++) {
+        if (i - 1 >= 0) {
+            weight = items[i - 1][0];
+            value = items[i - 1][1];
+        }
+        for (int j = 0; j <= capacity; j++) {
+            if (i == 0 || j == 0) {
+                memo[i][j] = 0;
+            } else if (weight <= j) { // ← ここを修正
+                memo[i][j] = Math.max(memo[i - 1][j], value + memo[i - 1][j - weight]);
+            } else {
+                memo[i][j] = memo[i - 1][j];
+            }
+        }
+    }
+    return memo[n][capacity];
+}
+
+なぜこれで直るのか（短く）
+- DP状態 memo[i][j] は「i個目までのアイテムを使って容量jで達成できる最大価値」です。
+- 重さがちょうど j に一致するアイテムも選択肢に入れなければ最適解を逃します。<= にすることで「入るなら使う」が正しく機能します。
+- 実際、失敗していたテストはすべて「ちょうど入る」ケースを含んでおり、<= に変えることで最適値が出るようになります。
+
+修正後のテスト結果（全件）
+- test_0: expected 19, got 19 -> OK
+- test_1: expected 30, got 30 -> OK
+- test_2: expected 1458, got 1458 -> OK
+- test_3: expected 51, got 51 -> OK
+- test_4: expected 107, got 107 -> OK
+- test_5: expected 150, got 150 -> OK
+- test_6: expected 900, got 900 -> OK
+- test_7: expected 309, got 309 -> OK
+- test_8: expected 1735, got 1735 -> OK
+- test_9: expected 13549094, got 13549094 -> OK
+
+補足（任意の改善）
+- 可読性のため、weight と value の代入は i > 0 のときだけ行う（for (int i = 1; i <= n; i++) を使い、外側で最初に i=0 行を0初期化する）とより分かりやすくなります。ただし今回の不具合の主原因ではありません。
