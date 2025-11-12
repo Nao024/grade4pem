@@ -1,0 +1,60 @@
+[ユーザー]: g22954
+[日時]: 2025-11-12 21:29:04
+
+=== 入力情報 ===
+[プログラムファイル]: LCS_LENGTH.java
+[テストファイル]: LCS_LENGTH_TEST.java
+PEM: ems_LCS_LENGTH.txt
+[テスト有無]: あり
+[エラー数指定]: 指定なし
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因
+- 文字が一致したときに「ひとつ上の同じ列」の数に1を足していました。本当に知りたいのは「斜め左上（ひとつ上 かつ ひとつ左）」から続いている長さです。ここを見ないと、つながった同じ並びを正しく数えられません。
+- 文字が一致しないときの値を0に戻していないため、古い値が残ってしまいます。
+
+直し方（専門用語抜きの手順）
+1) 文字列の長さより1だけ大きい「数の表」を用意します。最初の行と最初の列はすべて0にします。  
+2) 左上から順に、各文字を見比べながら表を埋めます。  
+   - もし同じ文字なら「斜め左上の数 + 1」を入れます。  
+   - 違う文字なら0を入れます。  
+3) 表を埋める途中で、いちばん大きい数を覚えておき、最後にそれを返します。  
+これで「両方の文字列に、同じ順番で、しかもつながって現れる並び」の最長の長さが求まります。テストが期待しているのはこの値です。
+
+修正後コード（LCS_LENGTH.java のメソッド差し替え）
+package java_programs;
+public class LCS_LENGTH {
+    public static Integer lcs_length(String s, String t) {
+        if (s == null || t == null) return 0;
+        int m = s.length(), n = t.length();
+        int[][] dp = new int[m + 1][n + 1];
+        int best = 0;
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s.charAt(i - 1) == t.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    if (dp[i][j] > best) best = dp[i][j];
+                } else {
+                    dp[i][j] = 0;
+                }
+            }
+        }
+        return best;
+    }
+}
+
+テスト結果（修正後）
+- test_0: 2 PASSED
+- test_1: 4 PASSED
+- test_2: 0 PASSED
+- test_3: 3 PASSED
+- test_4: 3 PASSED
+- test_5: 7 PASSED
+- test_6: 6 PASSED
+- test_7: 3 PASSED
+- test_8: 3 PASSED
+
+すべてのテストが成功します。
