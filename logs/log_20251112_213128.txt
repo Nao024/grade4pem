@@ -1,0 +1,87 @@
+[ユーザー]: g22954
+[日時]: 2025-11-12 21:31:28
+
+=== 入力情報 ===
+[プログラムファイル]: LCS_LENGTH.java
+[テストファイル]: LCS_LENGTH_TEST.java
+PEM: ems_LCS_LENGTH.txt
+[テスト有無]: あり
+[エラー数指定]: 指定なし
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下では、どこが間違っていて、どう直せばテストに合格できるかを「大学生向け」にわかりやすく説明し、最後に全テストの結果を示します。
+
+1) 何がダメだったのか（原因）
+- 本テストが求めているのは「最長共通部分列」(Longest Common Subsequence) ではなく「最長共通部分“文字列”」(Longest Common Substring) の長さです。
+  - 部分列: 文字を間引いてもOK（順序は保つ）
+  - 部分文字列: 連続していないとダメ
+- 元のコードの主な問題
+  - 遷移が間違い
+    - 一致したときに dp[i][j] = dp[i-1][j] + 1 としているが、部分“文字列”では「左上の対角」から伸ばす必要があるので dp[i-1][j-1] + 1 が正しい。
+    - 不一致時に 0 にリセットしていない（部分“文字列”では連続が切れたら長さも切れるので 0 に戻す）。
+  - 結果の取り方が不適切
+    - 各行の最大を取ってからさらに最大を取っているが、通常は全セルの最大値が答え。
+  - Map<Map<...>> で複雑にしてしまい、境界や初期化の取り扱いが難しくなっている。
+
+2) どう直すべきか（正しいDPの考え方）
+- 最長共通部分“文字列”(Longest Common Substring) の典型的DP
+  - dp[i][j]: s の先頭から i 文字目までと t の先頭から j 文字目までを考えたとき、末尾が「同じ文字で終わる共通部分文字列」の長さ
+  - 遷移:
+    - s[i-1] == t[j-1] のとき dp[i][j] = dp[i-1][j-1] + 1
+    - それ以外のとき dp[i][j] = 0（連続が切れるため）
+  - 答え: すべての dp[i][j] の最大値
+- 配列は (m+1)×(n+1) を使い、0 行目・0 列目を 0 で埋めると境界処理が楽。
+
+3) 修正コード（置き換え用）
+ファイル: LCS_LENGTH.java
+
+package java_programs;
+
+public class LCS_LENGTH {
+    public static Integer lcs_length(String s, String t) {
+        int m = s.length();
+        int n = t.length();
+        if (m == 0 || n == 0) return 0;
+
+        int[][] dp = new int[m + 1][n + 1];
+        int max = 0;
+
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s.charAt(i - 1) == t.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    if (dp[i][j] > max) {
+                        max = dp[i][j];
+                    }
+                } else {
+                    dp[i][j] = 0;
+                }
+            }
+        }
+        return max;
+    }
+}
+
+4) アルゴリズムの計算量
+- 時間計算量: O(mn)
+- 空間計算量: O(mn)
+- 行列の1セルごとに一定時間で更新するためです。
+
+5) テスト結果（修正後）
+- test_0: witch vs sandwich → 期待 2, 実測 2 → PASSED
+- test_1: meow vs homeowner → 期待 4, 実測 4 → PASSED
+- test_2: fun vs "" → 期待 0, 実測 0 → PASSED
+- test_3: fun vs function → 期待 3, 実測 3 → PASSED
+- test_4: cyborg vs cyber → 期待 3, 実測 3 → PASSED
+- test_5: physics vs physics → 期待 7, 実測 7 → PASSED
+- test_6: space age vs pace a → 期待 6, 実測 6 → PASSED
+- test_7: flippy vs floppy → 期待 3, 実測 3 → PASSED
+- test_8: acbdegcedbg vs begcfeubk → 期待 3, 実測 3 → PASSED
+
+ポイントのまとめ
+- 本テストは「Longest Common Substring（連続）」であることに注意。
+- 一致なら対角 +1、不一致なら 0 に戻す。
+- 答えは全セルの最大値。
