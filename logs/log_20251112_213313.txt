@@ -1,0 +1,79 @@
+[ユーザー]: g22954
+[日時]: 2025-11-12 21:33:13
+
+=== 入力情報 ===
+[プログラムファイル]: LCS_LENGTH.java
+[テストファイル]: LCS_LENGTH_TEST.java
+PEM: ems_LCS_LENGTH.txt
+[テスト有無]: あり
+[エラー数指定]: 指定なし
+[解説レベル]: 上級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を技術的に詳しく説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と修正方針
+- このテスト群は「最長共通“部分列”(subsequence)」ではなく「最長共通“部分文字列”(substring, 連続)」の長さを期待しています。例えば:
+  - witch vs sandwich の期待値 2 は substring（"wi" または "ch"）で説明でき、subsequence なら 4 になってしまいます。
+- 現行実装の主な問題点
+  1) 遷移が誤り: 一致時に dp[i-1][j] + 1 を使っていますが、substring の DP は dp[i-1][j-1] + 1 です（左上から延ばす必要がある）。
+  2) 不一致時の扱いがない: substring の場合、不一致時はそのセルを 0 にリセットします。
+  3) i, j の 0 境界をケアしていない: i-1, j-1 にアクセスするので、1 始まりのテーブルにして境界を簡潔に扱うのが安全。
+  4) 結果の取り方が遠回り: 各行の最大値の最大を後から取るより、走査中にグローバル最大値を更新する方が明確。
+
+正しいアルゴリズム（最長共通部分文字列の長さ）
+- DP 定義: dp[i][j] = s の i 文字目までと t の j 文字目までを使ったときの、末尾が i, j で終わる最長共通“部分文字列”の長さ。
+- 遷移:
+  - もし s.charAt(i-1) == t.charAt(j-1) なら dp[i][j] = dp[i-1][j-1] + 1
+  - それ以外は dp[i][j] = 0
+- 答え: テーブル中の最大値（走査中に更新して保持）
+
+修正コード（シンプルで正しい実装）
+ファイル: LCS_LENGTH.java
+
+package java_programs;
+
+public class LCS_LENGTH {
+    // 最長共通「部分文字列」(substring) の長さを返す
+    public static Integer lcs_length(String s, String t) {
+        if (s == null || t == null) return 0;
+        int n = s.length();
+        int m = t.length();
+        if (n == 0 || m == 0) return 0;
+
+        int[][] dp = new int[n + 1][m + 1];
+        int max = 0;
+
+        for (int i = 1; i <= n; i++) {
+            char cs = s.charAt(i - 1);
+            for (int j = 1; j <= m; j++) {
+                if (cs == t.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;  // 斜め左上から延ばす
+                    if (dp[i][j] > max) {
+                        max = dp[i][j];               // グローバル最大を更新
+                    }
+                } else {
+                    dp[i][j] = 0;                      // substring は不一致でリセット
+                }
+            }
+        }
+        return max;
+    }
+}
+
+ポイント
+- 1 行おきに配列を使う最適化なども可能ですが、まずは明快さを優先しました。
+- 時間計算量 O(n*m)、空間計算量 O(n*m)。
+
+テスト結果（修正後）
+- test_0: input ("witch","sandwich") => result 2 [PASSED]
+- test_1: input ("meow","homeowner") => result 4 [PASSED]
+- test_2: input ("fun","") => result 0 [PASSED]
+- test_3: input ("fun","function") => result 3 [PASSED]
+- test_4: input ("cyborg","cyber") => result 3 [PASSED]
+- test_5: input ("physics","physics") => result 7 [PASSED]
+- test_6: input ("space age","pace a") => result 6 [PASSED]
+- test_7: input ("flippy","floppy") => result 3 [PASSED]
+- test_8: input ("acbdegcedbg","begcfeubk") => result 3 [PASSED]
+
+すべてのテストが期待どおり成功します。
