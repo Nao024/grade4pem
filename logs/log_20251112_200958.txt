@@ -1,0 +1,74 @@
+[ユーザー]: g22954
+[日時]: 2025-11-12 20:09:58
+
+=== 入力情報 ===
+[プログラムファイル]: LCS_LENGTH.java
+[テストファイル]: LCS_LENGTH_TEST.java
+PEM: ems_LCS_LENGTH.txt
+[テスト有無]: あり
+[エラー数指定]: １つだけ
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+ポイント
+- このテストは「最長共通部分列（Longest Common Subsequence）」ではなく「最長共通部分文字列（Longest Common Substring）」の長さを求めています。
+- 最も重要な誤りは、文字が一致したときのDPの遷移で dp[i-1][j] を参照している点です。本来は「左上」dp[i-1][j-1] を参照し、連続一致の長さを1伸ばします。
+
+直し方（最小変更での修正例）
+下記のように「一致時は dp[i-1][j-1] + 1」「不一致時は 0」に修正します。i==0 や j==0 の境界では前値は 0 として扱います。
+
+LCS_LENGTH.java（該当部分のみ抜粋）
+public static Integer lcs_length(String s, String t) {
+    Map<Integer, Map<Integer,Integer>> dp = new HashMap<Integer,Map<Integer,Integer>>();
+
+    // 0 で初期化
+    for (int i=0; i < s.length(); i++) {
+        Map<Integer,Integer> initialize = new HashMap<Integer,Integer>();
+        dp.put(i, initialize);
+        for (int j=0; j < t.length(); j++) {
+            dp.get(i).put(j, 0);
+        }
+    }
+
+    // 一致時は左上 + 1、不一致時は 0（最長共通「部分文字列」）
+    for (int i=0; i < s.length(); i++) {
+        for (int j=0; j < t.length(); j++) {
+            if (s.charAt(i) == t.charAt(j)) {
+                int prev = (i > 0 && j > 0) ? dp.get(i-1).get(j-1) : 0;
+                dp.get(i).put(j, prev + 1);
+            } else {
+                dp.get(i).put(j, 0);
+            }
+        }
+    }
+
+    // テーブル中の最大値が答え
+    int ans = 0;
+    for (int i=0; i<s.length(); i++) {
+        for (int j=0; j<t.length(); j++) {
+            ans = Math.max(ans, dp.get(i).get(j));
+        }
+    }
+    return ans;
+}
+
+解説（なぜこれで直るか）
+- 最長共通「部分文字列」は“連続して一致している長さ”を数えます。よって不一致が出たら連続性は途切れるため、そのマスは 0 に戻します。
+- 一致した場合だけ、左上のマス dp[i-1][j-1] に 1 を足して“連続数”を伸ばします。
+- 答えはテーブル内の最大値（どこで終わっていてもよい）になります。
+
+テスト結果（修正後）
+- test_0: expected 2, actual 2 -> PASS
+- test_1: expected 4, actual 4 -> PASS
+- test_2: expected 0, actual 0 -> PASS
+- test_3: expected 3, actual 3 -> PASS
+- test_4: expected 3, actual 3 -> PASS
+- test_5: expected 7, actual 7 -> PASS
+- test_6: expected 6, actual 6 -> PASS
+- test_7: expected 3, actual 3 -> PASS
+- test_8: expected 3, actual 3 -> PASS
+
+補足
+- 配列版で書き直すなら、int[][] dp = new int[n+1][m+1] を使い、dp[i][j] = (s[i-1]==t[j-1]) ? dp[i-1][j-1]+1 : 0、答えは配列中の最大値、とすると境界処理がより簡潔になります。時間計算量は O(nm)、追加メモリも O(nm) です。
