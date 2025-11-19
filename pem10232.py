@@ -36,6 +36,34 @@ def filename_timestamp_jst_iso():
     tz = pytz.timezone("Asia/Tokyo")
     now = datetime.now(tz)
     return now.strftime("%Y%m%d_%H%M%S")
+
+def auto_select_related_files(program_name):
+    """
+    選んだ Java プログラムに対応するテストケース・PEM を自動選択する
+    ・ファイル名の先頭一致で検索（例：BITCOUNT → BITCOUNT_TEST.java）
+    """
+    base = os.path.splitext(program_name)[0]  
+
+    testcase_dir = "testcases"
+    pem_dir = "pems"
+
+    testcase = "なし"
+    pem = "なし"
+
+    if os.path.exists(testcase_dir):
+        files = os.listdir(testcase_dir)
+        matches = [f for f in files if f.startswith(base)]
+        if matches:
+            testcase = matches[0]
+
+    if os.path.exists(pem_dir):
+        files = os.listdir(pem_dir)
+        matches = [f for f in files if f.startswith(base)]
+        if matches:
+            pem = matches[0]
+
+    return testcase, pem
+
     
 # ========== GitHub 連携 ==========
 def get_github_file(owner: str, repo: str, path: str):
@@ -241,7 +269,11 @@ def main_page():
     st.title("AIによるプログラムエラー診断ツール")
 
     # --- 入力エリア ---
-    st.header("① ファイルと情報の入力")
+    st.header("① 使用するプログラムを選択")
+    program_files = os.listdir("programs")
+    testcase_files = os.listdir("testcases")
+    pem_files = os.listdir("pems")
+
     program = st.file_uploader("Javaプログラム（.java）をアップロード", type=["java"], accept_multiple_files=True)
     testcase = st.file_uploader("テストケース（任意）をアップロード", type=["java"], accept_multiple_files=True)
     pem = st.file_uploader("PEMファイル（任意）をアップロード", type=["txt"], accept_multiple_files=True)
