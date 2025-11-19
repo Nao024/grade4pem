@@ -64,6 +64,14 @@ def auto_select_related_files(program_name):
 
     return testcase, pem
 
+def read_file(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except:
+        return ""
+
+
     
 # ========== GitHub 連携 ==========
 def get_github_file(owner: str, repo: str, path: str):
