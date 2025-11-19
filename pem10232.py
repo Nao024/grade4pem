@@ -278,13 +278,16 @@ def main_page():
 
     # --- 入力エリア ---
     st.header("① 使用するプログラムを選択")
-    program_files = os.listdir("programs")
-    testcase_files = os.listdir("testcases")
-    pem_files = os.listdir("pems")
+    program_dir = "programs"
+    program_files = os.listdir(program_dir)
 
-    program = st.file_uploader("Javaプログラム（.java）をアップロード", type=["java"], accept_multiple_files=True)
-    testcase = st.file_uploader("テストケース（任意）をアップロード", type=["java"], accept_multiple_files=True)
-    pem = st.file_uploader("PEMファイル（任意）をアップロード", type=["txt"], accept_multiple_files=True)
+    selected_program = st.selectbox("Javaプログラムを選択", program_files)
+
+    # 自動で関連テストケースと PEM を決定
+    selected_testcase, selected_pem = auto_select_related_files(selected_program)
+
+    st.info(f"🔧 自動選択されたテストケース: {selected_testcase}")
+    st.info(f"🔧 自動選択された PEM: {selected_pem}")
 
     # --- 条件選択 ---
     st.header("② 条件を選択")
@@ -315,41 +318,37 @@ def main_page():
 
     # --- 実行ボタン ---
     if st.button("AIに送信"):
-        if not program:
-            st.error("Javaプログラムをアップロードしてください。")
-        else:
-            write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
-            st.success("以下の条件でAIに送信しました。")
-            st.write({
-                "テストケース": test_opt,
-                "指摘数": error_opt,
-                "解説レベル": level_opt
-            })
-            st.write("使用プロンプト:")
-            st.code(selected_prompt, language="markdown")
+         program_text = f"\n\n【{selected_program}】\n" + \
+                       read_file(f"{program_dir}/{selected_program}")
 
-            st.info("AIが解析中です。しばらくお待ちください…")
+        testcase_text = ""
+        if selected_testcase != "なし":
+            testcase_text = f"\n\n【{selected_testcase}】\n" + \
+                            read_file(f"testcases/{selected_testcase}")
 
-            program_text = "".join(f"\n\n【{p.name}】\n{p.read().decode('utf-8')}" for p in program)
-            testcase_text = "".join(f"\n\n【{t.name}】\n{t.read().decode('utf-8')}" for t in testcase) if testcase else ""
-            pem_text = "".join(f"\n\n【{pe.name}】\n{pe.read().decode('utf-8')}" for pe in pem) if pem else ""
+        pem_text = ""
+        if selected_pem != "なし":
+            pem_text = f"\n\n【{selected_pem}】\n" + \
+                       read_file(f"pems/{selected_pem}")
 
+        full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
 
-            full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
+        write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
 
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-5",
-                    messages=[
-                        {"role": "system", "content": "あなたは熟練したJava講師です。"},
-                        {"role": "user", "content": full_prompt}
-                    ]
-                )
+        try:
+            response = client.chat.completions.create(
+                model="gpt-5",
+                messages=[
+                    {"role": "system", "content": "あなたは熟練したJava講師です。"},
+                    {"role": "user", "content": full_prompt}
+                ]
+            )
 
-                result = response.choices[0].message.content
-                st.success(" AIの解析が完了しました！")
-                st.subheader("④ AIの解析結果")
-                st.markdown(result)
+            result = response.choices[0].message.content
+            st.success(" AIの解析が完了しました！")
+            st.subheader("④ AIの解析結果")
+            st.markdown(result)
+
 
                 # --- ログ記録（解析結果も） ---
                 github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
