@@ -356,12 +356,9 @@ def main_page():
                 msg = f"[ユーザー]: {st.session_state.user_id}\n"
                 msg += f"[日時]: {timestamp_jst_iso()}\n\n"
                 msg += "=== 入力情報 ===\n"
-                program_names = [p.name for p in program] if program else []
-                test_names = [t.name for t in testcase] if testcase else []
-                pem_names = [pe.name for pe in pem] if pem else []
-                msg += f"[プログラムファイル]: {', '.join(program_names)}\n"
-                msg += f"[テストファイル]: {', '.join(test_names) or 'なし'}\n"
-                msg += f"PEM: {', '.join(pem_names) or 'なし'}\n"
+                msg += f"[プログラム]: {selected_program}\n"
+　　　　　　      msg += f"[テスト]: {selected_testcase}\n"
+                msg += f"[PEM]: {selected_pem}\n"
                 msg += f"[テスト有無]: {test_opt}\n"
                 msg += f"[エラー数指定]: {error_opt}\n"
                 msg += f"[解説レベル]: {level_opt}\n"
