@@ -343,27 +343,26 @@ def main_page():
             st.success(" AIの解析が完了しました！")
             st.subheader("④ AIの解析結果")
             st.markdown(result)
-
-
-                # --- ログ記録（解析結果も） ---
-                github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
-                
-                msg = f"[ユーザー]: {st.session_state.user_id}\n"
-                msg += f"[日時]: {timestamp_jst_iso()}\n\n"
-                msg += "=== 入力情報 ===\n"
-                msg += f"[プログラム]: {selected_program}\n"
-　　　　　　      msg += f"[テスト]: {selected_testcase}\n"
-                msg += f"[PEM]: {selected_pem}\n"
-                msg += f"[テスト有無]: {test_opt}\n"
-                msg += f"[エラー数指定]: {error_opt}\n"
-                msg += f"[解説レベル]: {level_opt}\n"
-                msg += "=== プロンプト ===\n"
-                msg += f"{selected_prompt}\n\n"
-                msg += "=== 解析結果 ===\n"
-                msg += result
+            
+            # --- ログ記録（解析結果も） ---
+            github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
+            
+            msg = f"[ユーザー]: {st.session_state.user_id}\n"
+            msg += f"[日時]: {timestamp_jst_iso()}\n\n"
+            msg += "=== 入力情報 ===\n"
+            msg += f"[プログラム]: {selected_program}\n"
+　　　　　　  msg += f"[テスト]: {selected_testcase}\n"
+            msg += f"[PEM]: {selected_pem}\n"
+            msg += f"[テスト有無]: {test_opt}\n"
+            msg += f"[エラー数指定]: {error_opt}\n"
+            msg += f"[解説レベル]: {level_opt}\n"
+            msg += "=== プロンプト ===\n"
+            msg += f"{selected_prompt}\n\n"
+            msg += "=== 解析結果 ===\n"
+            msg += result
                 
                 # GitHubにも追記
-                append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
+            append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
 
             except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
