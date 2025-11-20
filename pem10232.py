@@ -313,26 +313,32 @@ def main_page():
     st.code(selected_prompt, language="markdown")
 
     # --- 実行ボタン ---
+        # --- 実行ボタン ---
     if st.button("AIに送信"):
-        with st.spinner("AIが生成中です。しばらくお待ちください。"):
-            program_text = f"\n\n【{selected_program}】\n" + \
-                       read_file(f"{program_dir}/{selected_program}")
 
-            testcase_text =""
-            if selected_testcase!= "なし":
-                testcase_text = f"\n\n【{selected_testcase}】\n" + \
-                            read_file(f"testcases/{selected_testcase}")
+        try:
+            with st.spinner("AIが生成中です。しばらくお待ちください。"):
+                program_text = f"\n\n【{selected_program}】\n" + \
+                               read_file(f"{program_dir}/{selected_program}")
 
-            pem_text = ""
-            if selected_pem != "なし":
-                pem_text = f"\n\n【{selected_pem}】\n" + \
-                       read_file(f"pems/{selected_pem}")
+                testcase_text = ""
+                if selected_testcase != "なし":
+                    testcase_text = f"\n\n【{selected_testcase}】\n" + \
+                                    read_file(f"testcases/{selected_testcase}")
 
-            full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
+                pem_text = ""
+                if selected_pem != "なし":
+                    pem_text = f"\n\n【{selected_pem}】\n" + \
+                               read_file(f"pems/{selected_pem}")
 
-            write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
-            
-            try:
+                full_prompt = (
+                    f"{selected_prompt}\n\n【プログラム】\n{program_text}"
+                    f"\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
+                )
+
+                write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
+
+                # --- OpenAI API 呼び出し ---
                 response = client.chat.completions.create(
                     model="gpt-5",
                     messages=[
@@ -340,37 +346,35 @@ def main_page():
                         {"role": "user", "content": full_prompt}
                     ]
                 )
-            except Exception as e:
-                st.error(f"AI解析中にエラーが発生しました: {e}")
-                return
-                
-            result = response.choices[0].message.content
-            st.success(" AIの解析が完了しました！")
-            st.subheader("④ AIの解析結果")
-            st.markdown(result)
-            
-            # --- ログ記録（解析結果も） ---
-            github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
-            
-            msg = f"[ユーザー]: {st.session_state.user_id}\n"
-            msg += f"[日時]: {timestamp_jst_iso()}\n\n"
-            msg += "=== 入力情報 ===\n"
-            msg += f"[プログラム]: {selected_program}\n"
-            msg += f"[テスト]: {selected_testcase}\n"
-            msg += f"[PEM]: {selected_pem}\n"
-            #msg += f"[テスト有無]: {test_opt}\n"
-            msg += f"[エラー数指定]: {error_opt}\n"
-            msg += f"[解説レベル]: {level_opt}\n"
-            msg += "=== プロンプト ===\n"
-            msg += f"{selected_prompt}\n\n"
-            msg += "=== 解析結果 ===\n"
-            msg += result
-                
-                # GitHubにも追記
-            append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
 
-except Exception as e:
-                st.error(f"AI解析中にエラーが発生しました: {e}")
+        except Exception as e:
+            st.error(f"AI解析中にエラーが発生しました: {e}")
+            return
+
+        # ========= ここから spinner の外 =========
+        result = response.choices[0].message.content
+
+        st.success(" AIの解析が完了しました！")
+        st.subheader("④ AIの解析結果")
+        st.markdown(result)
+
+        # --- ログ記録 ---
+        github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
+
+        msg = f"[ユーザー]: {st.session_state.user_id}\n"
+        msg += f"[日時]: {timestamp_jst_iso()}\n\n"
+        msg += "=== 入力情報 ===\n"
+        msg += f"[プログラム]: {selected_program}\n"
+        msg += f"[テスト]: {selected_testcase}\n"
+        msg += f"[PEM]: {selected_pem}\n"
+        msg += f"[エラー数指定]: {error_opt}\n"
+        msg += f"[解説レベル]: {level_opt}\n"
+        msg += "=== プロンプト ===\n"
+        msg += f"{selected_prompt}\n\n"
+        msg += "=== 解析結果 ===\n"
+        msg += result
+
+        append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
 
 # ========== ページ遷移制御 ==========
 if st.session_state.page == "login":
