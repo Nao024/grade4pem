@@ -293,7 +293,7 @@ def main_page():
     level_opt = st.radio("解説レベル", ["初級", "中級", "上級"], horizontal=True)
 
     # --- プロンプト生成 ---
-    def build_prompt(tcase, err, level):
+    def build_prompt(err, level):
         common = "次のプログラムについて、テストケースが成功するようにエラーの修正方法を"
         audience = {"初級": "専門用語を使わずに", "中級": "大学生向けに", "上級": "技術的に詳しく"}
         target = audience[level]
