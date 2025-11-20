@@ -1,0 +1,47 @@
+KNAPSACK_TEST > test_1 FAILED
+    java.lang.AssertionError: expected:<30> but was:<20>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at java_testcases.junit.KNAPSACK_TEST.test_1(KNAPSACK_TEST.java:14)
+
+KNAPSACK_TEST > test_3 FAILED
+    java.lang.AssertionError: expected:<51> but was:<47>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at java_testcases.junit.KNAPSACK_TEST.test_3(KNAPSACK_TEST.java:26)
+
+KNAPSACK_TEST > test_4 FAILED
+    java.lang.AssertionError: expected:<107> but was:<102>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at java_testcases.junit.KNAPSACK_TEST.test_4(KNAPSACK_TEST.java:32)
+
+KNAPSACK_TEST > test_5 FAILED
+    java.lang.AssertionError: expected:<150> but was:<146>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at java_testcases.junit.KNAPSACK_TEST.test_5(KNAPSACK_TEST.java:38)
+
+KNAPSACK_TEST > test_6 FAILED
+    java.lang.AssertionError: expected:<900> but was:<898>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at java_testcases.junit.KNAPSACK_TEST.test_6(KNAPSACK_TEST.java:44)
+
+KNAPSACK_TEST > test_7 FAILED
+    java.lang.AssertionError: expected:<309> but was:<284>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at java_testcases.junit.KNAPSACK_TEST.test_7(KNAPSACK_TEST.java:50)
