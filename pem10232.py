@@ -314,36 +314,37 @@ def main_page():
 
     # --- 実行ボタン ---
     if st.button("AIに送信"):
-        program_text = f"\n\n【{selected_program}】\n" + \
+        with st.spinner("AIが生成中です。しばらくお待ちください。"):
+            program_text = f"\n\n【{selected_program}】\n" + \
                        read_file(f"{program_dir}/{selected_program}")
 
-        testcase_text =""
-        if selected_testcase!= "なし":
-            testcase_text = f"\n\n【{selected_testcase}】\n" + \
+            testcase_text =""
+            if selected_testcase!= "なし":
+                testcase_text = f"\n\n【{selected_testcase}】\n" + \
                             read_file(f"testcases/{selected_testcase}")
 
-        pem_text = ""
-        if selected_pem != "なし":
-            pem_text = f"\n\n【{selected_pem}】\n" + \
+            pem_text = ""
+            if selected_pem != "なし":
+                pem_text = f"\n\n【{selected_pem}】\n" + \
                        read_file(f"pems/{selected_pem}")
 
-        full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
+            full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
 
-        write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
+            write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
 
-        try:
-            response = client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {"role": "system", "content": "あなたは熟練したJava講師です。"},
-                    {"role": "user", "content": full_prompt}
-                ]
-            )
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-5",
+                    messages=[
+                        {"role": "system", "content": "あなたは熟練したJava講師です。"},
+                        {"role": "user", "content": full_prompt}
+                    ]
+                )
 
-            result = response.choices[0].message.content
-            st.success(" AIの解析が完了しました！")
-            st.subheader("④ AIの解析結果")
-            st.markdown(result)
+        result = response.choices[0].message.content
+        st.success(" AIの解析が完了しました！")
+        st.subheader("④ AIの解析結果")
+        st.markdown(result)
             
             # --- ログ記録（解析結果も） ---
             github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
