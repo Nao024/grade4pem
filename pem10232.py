@@ -331,7 +331,7 @@ def main_page():
             full_prompt = f"{selected_prompt}\n\n【プログラム】\n{program_text}\n\n【テストケース】\n{testcase_text}\n【PEM】{pem_text}"
 
             write_log(f"実行: {st.session_state.user_id} がAI診断を実行")
-
+            
             try:
                 response = client.chat.completions.create(
                     model="gpt-5",
@@ -340,11 +340,11 @@ def main_page():
                         {"role": "user", "content": full_prompt}
                     ]
                 )
-
-        result = response.choices[0].message.content
-        st.success(" AIの解析が完了しました！")
-        st.subheader("④ AIの解析結果")
-        st.markdown(result)
+                
+                result = response.choices[0].message.content
+                st.success(" AIの解析が完了しました！")
+                st.subheader("④ AIの解析結果")
+                st.markdown(result)
             
             # --- ログ記録（解析結果も） ---
             github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
