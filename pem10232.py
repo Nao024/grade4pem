@@ -340,11 +340,14 @@ def main_page():
                         {"role": "user", "content": full_prompt}
                     ]
                 )
+            except Exception as e:
+                st.error(f"AI解析中にエラーが発生しました: {e}")
+                return
                 
-                result = response.choices[0].message.content
-                st.success(" AIの解析が完了しました！")
-                st.subheader("④ AIの解析結果")
-                st.markdown(result)
+            result = response.choices[0].message.content
+            st.success(" AIの解析が完了しました！")
+            st.subheader("④ AIの解析結果")
+            st.markdown(result)
             
             # --- ログ記録（解析結果も） ---
             github_log_path = os.path.join(LOG_DIR, f"log_{filename_timestamp_jst_iso()}.txt")
