@@ -1,0 +1,44 @@
+[ユーザー]: g22923
+[日時]: 2025-11-20 14:08:03
+
+=== 入力情報 ===
+[プログラム]: GCD.java
+[テスト]: GCD_TEST.java
+[PEM]: GCD_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因
+・gcdを呼び直すとき、2つの数の並びが逆になっているため、同じ計算を延々とくり返して止まらなくなっています。
+・正しくは「(小さい方ではなく)後ろの数」と「前の数を後ろの数で割ったときの余り」の並びで呼び直します。
+
+直し方（最重要の1点）
+・次の1行だけを直してください。
+  return gcd(a % b, b);
+  を
+  return gcd(b, a % b);
+  に変更
+
+修正版 GCD.java（全体）
+package java_programs;
+import java.util.*;
+
+public class GCD {
+    public static int gcd(int a, int b) {
+        if (b == 0) {
+            return a;
+        } else {
+            return gcd(b, a % b);
+        }
+    }
+}
+
+テスト結果（修正後）
+・GCD_TEST > test_0 PASSED（gcd(13,13) = 13）
+・GCD_TEST > test_1 PASSED（gcd(37,600) = 1）
+・GCD_TEST > test_2 PASSED（gcd(20,100) = 20）
+・GCD_TEST > test_3 PASSED（gcd(624129,2061517) = 18913）
+・GCD_TEST > test_4 PASSED（gcd(3,12) = 3）
