@@ -1,5 +1,0 @@
-BREADTH_FIRST_SEARCH_TEST > test3 FAILED
-    java.util.NoSuchElementException
-        at java.base/java.util.ArrayDeque.removeFirst(ArrayDeque.java:361)
-        at java_programs.BREADTH_FIRST_SEARCH.breadth_first_search(BREADTH_FIRST_SEARCH.java:25)
-        at java_testcases.junit.BREADTH_FIRST_SEARCH_TEST.test3(BREADTH_FIRST_SEARCH_TEST.java:73)
