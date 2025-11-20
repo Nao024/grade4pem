@@ -42,25 +42,20 @@ def auto_select_related_files(program_name):
     選んだ Java プログラムに対応するテストケース・PEM を自動選択する
     ・ファイル名の先頭一致で検索（例：BITCOUNT → BITCOUNT_TEST.java）
     """
-    base = os.path.splitext(program_name)[0]  
+    base = os.path.splitext(program_name)[0]  # "BITCOUNT.java" → "BITCOUNT"
 
-    testcase_dir = "testcases"
-    pem_dir = "pems"
+    testcase = f"{base}_TEST.java"
+    pem = f"{base}_pem.txt"
 
-    testcase = "なし"
-    pem = "なし"
+    # testcases と pems フォルダ内に存在するか確認
+    testcase_path = os.path.join("testcases", testcase)
+    pem_path = os.path.join("pems", pem)
 
-    if os.path.exists(testcase_dir):
-        files = os.listdir(testcase_dir)
-        matches = [f for f in files if f.startswith(base)]
-        if matches:
-            testcase = matches[0]
+    if not os.path.exists(testcase_path):
+        testcase = "なし"
 
-    if os.path.exists(pem_dir):
-        files = os.listdir(pem_dir)
-        matches = [f for f in files if f.startswith(base)]
-        if matches:
-            pem = matches[0]
+    if not os.path.exists(pem_path):
+        pem = "なし"
 
     return testcase, pem
 
