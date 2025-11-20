@@ -288,7 +288,7 @@ def main_page():
 
     # --- 条件選択 ---
     st.header("② 条件を選択")
-    test_opt = st.radio("テストケースの有無", ["あり", "なし"], horizontal=True)
+    #test_opt = st.radio("テストケースの有無", ["あり", "なし"], horizontal=True)
     error_opt = st.selectbox("指摘するエラー数", ["１つだけ", "できるだけたくさん", "指定なし"])
     level_opt = st.radio("解説レベル", ["初級", "中級", "上級"], horizontal=True)
 
@@ -301,9 +301,9 @@ def main_page():
         prompt = f"{common}{target}説明してください。"
         if err == "１つだけ":
             prompt += "エラーが複数ある場合は、最も重要なものを1つ挙げてください。"
+            prompt += "テストケースの結果も全て表示してください。"
         elif err == "できるだけたくさん":
             prompt += "修正箇所をできるだけ多く挙げてください。"
-        if tcase == "あり":
             prompt += "テストケースの結果も全て表示してください。"
         return prompt
 
@@ -355,7 +355,7 @@ def main_page():
             msg += f"[プログラム]: {selected_program}\n"
             msg += f"[テスト]: {selected_testcase}\n"
             msg += f"[PEM]: {selected_pem}\n"
-            msg += f"[テスト有無]: {test_opt}\n"
+            #msg += f"[テスト有無]: {test_opt}\n"
             msg += f"[エラー数指定]: {error_opt}\n"
             msg += f"[解説レベル]: {level_opt}\n"
             msg += "=== プロンプト ===\n"
