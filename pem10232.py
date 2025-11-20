@@ -317,7 +317,7 @@ def main_page():
                        read_file(f"{program_dir}/{selected_program}")
 
          testcase_text =""
-        if selected_testcase != "なし":
+        if selected_testcase!= "なし":
             testcase_text = f"\n\n【{selected_testcase}】\n" + \
                             read_file(f"testcases/{selected_testcase}")
 
