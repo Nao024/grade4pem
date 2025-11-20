@@ -307,7 +307,7 @@ def main_page():
             prompt += "テストケースの結果も全て表示してください。"
         return prompt
 
-    selected_prompt = build_prompt(test_opt, error_opt, level_opt)
+    selected_prompt = build_prompt(error_opt, level_opt)
 
     # --- 出力 ---
     st.header("③ 選択されたプロンプト")
