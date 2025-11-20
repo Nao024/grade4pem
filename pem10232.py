@@ -313,10 +313,10 @@ def main_page():
 
     # --- 実行ボタン ---
     if st.button("AIに送信"):
-         program_text = f"\n\n【{selected_program}】\n" + \
+        program_text = f"\n\n【{selected_program}】\n" + \
                        read_file(f"{program_dir}/{selected_program}")
 
-         testcase_text =""
+        testcase_text =""
         if selected_testcase!= "なし":
             testcase_text = f"\n\n【{selected_testcase}】\n" + \
                             read_file(f"testcases/{selected_testcase}")
