@@ -274,7 +274,9 @@ def main_page():
     # --- 入力エリア ---
     st.header("① 使用するプログラムを選択")
     program_dir = "programs"
-    program_files = os.listdir(program_dir)
+    program_files = [f for f in os.listdir(program_dir)
+                 if os.path.isfile(os.path.join(program_dir, f))
+                 and f.endswith(".java")]
 
     selected_program = st.selectbox("Javaプログラムを選択", program_files)
 
