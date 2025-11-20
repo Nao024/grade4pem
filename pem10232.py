@@ -301,10 +301,9 @@ def main_page():
         prompt = f"{common}{target}説明してください。"
         if err == "１つだけ":
             prompt += "エラーが複数ある場合は、最も重要なものを1つ挙げてください。"
-            prompt += "テストケースの結果も全て表示してください。"
         elif err == "できるだけたくさん":
             prompt += "修正箇所をできるだけ多く挙げてください。"
-            prompt += "テストケースの結果も全て表示してください。"
+        prompt += "テストケースの結果も全て表示してください。"
         return prompt
 
     selected_prompt = build_prompt(error_opt, level_opt)
