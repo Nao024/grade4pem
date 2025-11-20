@@ -351,7 +351,7 @@ def main_page():
             msg += f"[日時]: {timestamp_jst_iso()}\n\n"
             msg += "=== 入力情報 ===\n"
             msg += f"[プログラム]: {selected_program}\n"
-　　　　　　  msg += f"[テスト]: {selected_testcase}\n"
+            msg += f"[テスト]: {selected_testcase}\n"
             msg += f"[PEM]: {selected_pem}\n"
             msg += f"[テスト有無]: {test_opt}\n"
             msg += f"[エラー数指定]: {error_opt}\n"
