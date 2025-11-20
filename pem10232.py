@@ -364,7 +364,7 @@ def main_page():
                 # GitHubにも追記
             append_line_to_repo_log(REPO_OWNER, REPO_NAME, github_log_path, msg)
 
-            except Exception as e:
+        except Exception as e:
                 st.error(f"AI解析中にエラーが発生しました: {e}")
 
 # ========== ページ遷移制御 ==========
