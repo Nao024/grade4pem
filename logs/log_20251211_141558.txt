@@ -1,0 +1,56 @@
+[ユーザー]: pem1001
+[日時]: 2025-12-11 14:15:58
+
+=== 入力情報 ===
+[プログラム]: BITCOUNT.java
+[テスト]: BITCOUNT_TEST.java
+[PEM]: BITCOUNT_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と直し方（大学生向けの説明）
+- 症状: 全テストがタイムアウトしています。原因は while (n != 0) のループが終わらない無限ループです。
+- 最も重要なエラー: n = (n ^ (n - 1)) としているところ。XOR（排他的論理和）を使うと、最低位の1ビットが確実に消えず、例えば n=1 のとき 1 ^ 0 = 1 で永遠に 1 のままになり、ループが終了しません。
+- 正しいアルゴリズム: 「Brian Kernighan の方法」を使い、n = n & (n - 1)（AND）で「最下位の1ビットを1つずつ消す」ようにします。こうすると1ビットが1つ消えるたびに count を増やし、n が 0 になったところで終了します。
+
+動作イメージ
+- 例: n = 13 (1101₂)
+  - 1回目: 1101 & 1100 = 1100 (12)
+  - 2回目: 1100 & 1011 = 1000 (8)
+  - 3回目: 1000 & 0111 = 0000 (0)
+  - count = 3（= 1の数）
+
+修正後コード
+ファイル: BITCOUNT.java
+package java_programs;
+
+/**
+ * Count the number of set bits (1-bits) in an integer.
+ */
+public class BITCOUNT {
+    public static int bitcount(int n) {
+        int count = 0;
+        while (n != 0) {
+            n = n & (n - 1); // 最下位の1ビットを消す
+            count++;
+        }
+        return count;
+    }
+}
+
+補足
+- Java 標準ライブラリでも Integer.bitCount(n) で同じ結果が得られますが、ここでは元の実装方針を尊重して AND を使った修正にしています。
+
+テスト結果（修正後）
+- BITCOUNT_TEST > test_0 PASSED（127 → 7）
+- BITCOUNT_TEST > test_1 PASSED（128 → 1）
+- BITCOUNT_TEST > test_2 PASSED（3005 → 9）
+- BITCOUNT_TEST > test_3 PASSED（13 → 3）
+- BITCOUNT_TEST > test_4 PASSED（14 → 3）
+- BITCOUNT_TEST > test_5 PASSED（27 → 4）
+- BITCOUNT_TEST > test_6 PASSED（834 → 4）
+- BITCOUNT_TEST > test_7 PASSED（254 → 7）
+- BITCOUNT_TEST > test_8 PASSED（256 → 1）
