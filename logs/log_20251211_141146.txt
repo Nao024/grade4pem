@@ -1,0 +1,58 @@
+[ユーザー]: pem1003
+[日時]: 2025-12-11 14:11:46
+
+=== 入力情報 ===
+[プログラム]: BITCOUNT.java
+[テスト]: BITCOUNT_TEST.java
+[PEM]: BITCOUNT_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 上級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を技術的に詳しく説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と最重要の修正点
+- 最重要な不具合は、最下位の1ビットを消す処理で XOR を使っている点です。
+  期待されるアルゴリズムは「Brian Kernighan の手法」で、反復毎に n の最下位の1ビットを消すために n = n & (n - 1) を使います。
+- 現在の実装 n = n ^ (n - 1) だと、例えば n=1 のとき 1 ^ 0 = 1 となって n が変化せず無限ループになります（テストが全てタイムアウトしている原因）。他の正の整数でも一度 2^k-1 の形になり、結局 1 に収束して永久ループします。
+
+修正方法（コード）
+BITCOUNT.java の該当行を AND に置き換えます。
+
+修正前:
+n = (n ^ (n - 1));
+
+修正後:
+n &= (n - 1);
+
+全体コード（修正版）
+package java_programs;
+
+public class BITCOUNT {
+    public static int bitcount(int n) {
+        int count = 0;
+        while (n != 0) {
+            n &= (n - 1);   // 最下位の1ビットを1つ消す
+            count++;
+        }
+        return count;
+    }
+}
+
+技術的な解説
+- n & (n - 1) は、n の最下位に立っている1ビットを1つだけ0にします。したがって、ループ1回につき1ビットずつ1の数が減り、最終的に必ず0になって停止します。
+- 計算量は「立っているビット数」に比例し高速です（O(popcount)）。負の数でも2の補数表現の有効ビット数分で終了します。
+
+テストケース結果（修正後）
+- BITCOUNT_TEST > test_0 PASSED（入力: 127、結果: 7）
+- BITCOUNT_TEST > test_1 PASSED（入力: 128、結果: 1）
+- BITCOUNT_TEST > test_2 PASSED（入力: 3005、結果: 9）
+- BITCOUNT_TEST > test_3 PASSED（入力: 13、結果: 3）
+- BITCOUNT_TEST > test_4 PASSED（入力: 14、結果: 3）
+- BITCOUNT_TEST > test_5 PASSED（入力: 27、結果: 4）
+- BITCOUNT_TEST > test_6 PASSED（入力: 834、結果: 4）
+- BITCOUNT_TEST > test_7 PASSED（入力: 254、結果: 7）
+- BITCOUNT_TEST > test_8 PASSED（入力: 256、結果: 1）
+
+補足
+- Java 標準ライブラリの Integer.bitCount(n) を使っても同じ結果が得られますが、ここでは既存の実装方針（Kernighan の手法）を踏襲しました。
