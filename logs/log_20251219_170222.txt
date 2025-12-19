@@ -1,0 +1,65 @@
+[ユーザー]: pem1006
+[日時]: 2025-12-19 17:02:22
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と直し方（専門用語なしの説明）
+- 途中で道が無かったときに、空っぽの箱から無理やり取り出そうとして落ちています（test3 の例外）。もう調べる場所が無くなったら「見つからなかった」と終わる必要があります。
+- 次に調べる候補を「前に差し込む」書き方になっているため、順番が逆になっています。入れた順に取り出すようにします。
+- 前回の呼び出しで使った「訪れた印」が残り続ける作りです。毎回の検索の最初に消します。
+- 出発と目的が同じ場合は、最初から「見つかった」で終えてよいです。
+
+直し方（やること）
+1) 探す場所の箱が空かどうかを確かめながら回す。空になったら false を返す。  
+2) 次に調べる候補は「後ろに並べる」。  
+3) 毎回の最初に nodesvisited を空にする。  
+4) 最初に start と goal が同じなら true を返す。
+
+修正後のメソッド（差分の要点のみ）
+- while (true) → while (!queue.isEmpty())
+- 後続ノードの追加: queue.addFirst(...) → queue.addLast(...)
+- ループが終わったら return false
+- メソッド最初で nodesvisited.clear() と同一ノード判定
+
+修正例
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    nodesvisited.clear();
+    if (startnode == goalnode) {
+        return true;
+    }
+
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+    nodesvisited.add(startnode);
+
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+        if (node == goalnode) {
+            return true;
+        }
+        for (Node successor_node : node.getSuccessors()) {
+            if (!nodesvisited.contains(successor_node)) {
+                queue.addLast(successor_node);
+                nodesvisited.add(successor_node);
+            }
+        }
+    }
+    return false;
+}
+
+テスト結果（修正後）
+- test1: Path found! → PASS
+- test2: Path found! → PASS
+- test3: Path not found! → PASS
+- test4: Path found! → PASS
+- test5: Path found! → PASS
+
+すべてのテストが成功します（5/5）。
