@@ -1,0 +1,69 @@
+[ユーザー]: pem1007
+[日時]: 2025-12-19 16:39:22
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+ポイント（最重要のエラー）
+- ループに終了条件がないことが原因です。while(true) のままキューが空になって removeFirst() を呼ぶと、NoSuchElementException が発生します（PEM の test3 の失敗がこれ）。BFS は「探索すべき頂点のキューが空になったら探索失敗（false）」と判断して終了する必要があります。
+
+修正方針
+- ループ条件を while (!queue.isEmpty()) に変更する
+- ループを抜けたら return false を返す
+- 併せて BFS らしくするため、後続ノードは queue.addLast(...) でエンキューする（現在は addFirst で LIFO になっており DFS 的な挙動になります）
+- 訪問済み集合は呼び出しごとに初期化する（静的フィールドにするとテスト間で状態が残るためバグの温床）
+
+修正コード例
+package java_programs;
+import java.util.*;
+import java.util.ArrayDeque;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            // Node.equals が未定義の場合に備えて、テストでは同一参照を使っているため == でも可
+            if (node == goalnode) {
+                return true;
+            }
+            for (Node succ : node.getSuccessors()) {
+                if (!visited.contains(succ)) {
+                    queue.addLast(succ);   // FIFO で本来の BFS
+                    visited.add(succ);
+                }
+            }
+        }
+        // 探索し尽くして見つからなかった
+        return false;
+    }
+}
+
+なぜこれで直るか
+- キューが空になるまで探索し、空になったら「到達不能」と判断して false を返すため、NoSuchElementException は発生しません。
+- addLast にすることで、同じ深さのノードを幅優先に探索できます（テストは DFS でも通る構成ですが、BFS の実装として正しくなります）。
+- visited をメソッドローカルにしたことで、テスト間や複数回呼び出しで状態が残らず安全です。
+
+全テスト結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+
+補足（任意）
+- node == goalnode は参照同一性の比較です。Node クラスに equals/hashCode が実装されているなら equals を使う方が堅牢です。今回はテストが同一インスタンスを渡しているため == でも合格します。
