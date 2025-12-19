@@ -1,0 +1,103 @@
+[ユーザー]: pem1007
+[日時]: 2025-12-19 16:48:07
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下では、エラーの原因、修正方針、修正後コード、そしてテストの実行結果を大学生向けにわかりやすく説明します。
+
+1) 何が悪かったのか（原因）
+- while(true)＋queue.removeFirst()による例外
+  - キューが空になっても無限ループのままremoveFirst()を呼び続けるため、到達できないケースで NoSuchElementException が発生します（PEMのエラー）。
+  - 到達不可能な場合にfalseを返す処理がありません。
+- 幅優先探索になっていない
+  - 後続ノードをqueue.addFirst(...)で前に詰めており、実質スタック的な挙動（深さ優先寄り）になっています。幅優先探索ではFIFO（先入れ先出し）が必要なのでaddLast(...)にすべきです。
+- 訪問済み集合がstatic
+  - nodesvisitedがクラス静的フィールドのため、テスト間で状態が汚染されます。探索ごとにリセットされるローカル変数にすべきです。
+
+2) どう直すか（修正方針）
+- ループ条件を while(!queue.isEmpty()) にして、キューが空なら探索終了。
+- 探索が終わってもゴールに到達していなければ return false を返す。
+- 後続ノードは queue.addLast(...) でキューの末尾に入れる（FIFOを維持）。
+- 訪問済み集合 visited はメソッド内ローカル変数にする（または毎回クリア）。
+- 必要に応じて null 早期リターン（null入力時はfalse）を入れると堅牢。
+
+3) 修正後コード（BREADTH_FIRST_SEARCH.java）
+package java_programs;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+
+        Set<Node> visited = new HashSet<>();
+        Deque<Node> queue = new ArrayDeque<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode) {
+                return true;
+            }
+
+            for (Node successor : node.getSuccessors()) {
+                if (!visited.contains(successor)) {
+                    queue.addLast(successor);   // 幅優先：末尾に追加
+                    visited.add(successor);
+                }
+            }
+        }
+        return false;  // キューが空になっても見つからなければ到達不可能
+    }
+}
+
+ポイント
+- staticなnodesvisitedを削除し、メソッド内のvisitedに変更。
+- addFirst -> addLastに変更。
+- while(true) -> while(!queue.isEmpty()) に変更し、最後にreturn falseを追加。
+
+4) テストケースの実行結果
+修正後にJUnitを実行した場合の期待結果は以下の通りです。
+
+- Case 1: Strongly connected graph
+  - 結果: "Path found!"
+  - BREADTH_FIRST_SEARCH_TEST > test1 PASSED
+
+- Case 2: Branching graph
+  - 結果: "Path found!"
+  - BREADTH_FIRST_SEARCH_TEST > test2 PASSED
+
+- Case 3: Two unconnected nodes in graph
+  - 結果: "Path not found!"
+  - BREADTH_FIRST_SEARCH_TEST > test3 PASSED
+
+- Case 4: One node graph
+  - 結果: "Path found!"
+  - BREADTH_FIRST_SEARCH_TEST > test4 PASSED
+
+- Case 5: Graph with cycles
+  - 結果: "Path found!"
+  - BREADTH_FIRST_SEARCH_TEST > test5 PASSED
+
+補足（学習のポイント）
+- 幅優先探索は「キュー（FIFO）」、深さ優先探索は「スタック（LIFO）」というデータ構造の違いが本質です。queue.addLastでFIFOを守ることが重要です。
+- 探索アルゴリズムでは「訪問済み集合」を毎回適切に初期化し、テスト間の副作用を避けましょう。
+- ループが終了する条件（ここでは「キューが空」）と、到達できない場合の戻り値（false）を必ず用意しましょう。
+
+この修正で、すべてのテストが正常終了します。
