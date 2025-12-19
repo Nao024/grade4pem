@@ -1,0 +1,93 @@
+[ユーザー]: pem1006
+[日時]: 2025-12-19 17:07:58
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下では、なぜ現在のプログラムがテストに失敗するのか、どこをどう直せばよいのか、そして修正後にテストがどうなるかを大学生向けに分かりやすく解説します。
+
+問題点の整理
+- 無限ループ＋例外発生
+  - ループが while(true) のままになっており、探索用キューが空になってもループ終了条件がありません。
+  - queue.removeFirst() は、キューが空のときに NoSuchElementException を投げます。実際、test3（到達不可ケース）でキューが空になり例外が発生しています。
+- BFS になっていない
+  - 後続ノードを queue.addFirst(...) で追加しており、実質スタック（DFS 的）になっています。BFS では FIFO（先入れ先出し）なので queue.addLast(...) を使うべきです。
+- 訪問済み集合が static で共有されている
+  - public static Set<Node> nodesvisited により、テスト間や複数回呼び出しで訪問済み状態が共有されてしまいます。呼び出しごとに訪問済みを管理（ローカルに）すべきです。
+- 戻り値 false がない
+  - ゴールに到達できなかった場合に false を返すコードがありません（コメントアウトされている）。
+
+修正方針
+- キューが空になるまで探索するループにする: while (!queue.isEmpty())。
+- 後続ノードはキューの末尾に入れる: addLast(...)。
+- 訪問済み集合はメソッド内ローカル変数で運用する。
+- 例外や無限ループを避けるため、探索が尽きたら false を返す。
+- ついでに安全策として、startnode/goalnode が null の場合は false を返す。
+- ノードの比較は equals を使う（Node が equals を未 override でも参照同値になり、override 済みなら意味同値比較になります）。
+
+修正後のコード
+BREADTH_FIRST_SEARCH.java
+package java_programs;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node.equals(goalnode)) {
+                return true;
+            }
+
+            for (Node successor : node.getSuccessors()) {
+                if (!visited.contains(successor)) {
+                    queue.addLast(successor); // FIFO にする
+                    visited.add(successor);
+                }
+            }
+        }
+
+        // ここまで来たら到達不可
+        return false;
+    }
+}
+
+なぜこれで直るのか
+- キューが空になるまで探索するため、到達不可のときは安全にループが終了し false を返します（test3 が解決）。
+- addLast により正しい幅優先探索（BFS）になります。
+- visited をローカルにしたことで、複数回呼び出しても状態が汚染されません（テスト間の独立性が担保されます）。
+
+テスト結果（修正後）
+- test1: Path found!（強連結グラフ。到達可能）
+- test2: Path found!（分岐あり。到達可能）
+- test3: Path not found!（非連結。例外発生せず正しく不可判定）
+- test4: Path found!（単一ノードで開始＝目標）
+- test5: Path found!（サイクルありでも visited 管理で無限ループなし）
+
+JUnit サマリ
+- 5 tests, 5 passed
+
+補足
+- equals を使うことで、Node が名前等で同値性を定義している場合でも正しくゴール判定できます。未定義なら参照同一性になるので、テストのように同じインスタンスをゴールに指定しているケースは引き続き正しく動作します。
+- 実装の計算量は、頂点数 V、辺数 E に対して時間 O(V + E)、空間 O(V) です。
