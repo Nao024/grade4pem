@@ -1,0 +1,60 @@
+[ユーザー]: pem1007
+[日時]: 2025-12-19 16:45:08
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と直し方（むずかしい言葉なし）
+- 終わりの条件がない: 「調べる箱」が空になっているのに、ずっと取り出そうとするせいでエラーになります。箱が空なら「見つからなかった(false)」と返して終わりにします。
+- 調べる順番が逆: 次に調べる候補を「前」に入れていて、横に広がって探す動きになっていません。「後ろ」に入れるようにします。
+- 前に調べたことのある場所の記録が残りっぱなし: 検索の記録をクラス全体で共有しているため、別のテストに影響していました。検索のたびに新しく記録用の入れ物を作ります（メソッドの中だけで使うようにします）。
+
+修正後のコード（breadth_first_searchメソッドだけ差し替え）
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    if (startnode == null || goalnode == null) {
+        return false;
+    }
+
+    Set<Node> visited = new HashSet<>();
+    Deque<Node> queue = new ArrayDeque<>();
+
+    queue.addLast(startnode);
+    visited.add(startnode);
+
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        }
+
+        for (Node successor : node.getSuccessors()) {
+            if (!visited.contains(successor)) {
+                queue.addLast(successor);   // 後ろに入れる
+                visited.add(successor);     // 入れた時点で記録
+            }
+        }
+    }
+    return false; // ここまで来たら道は見つからなかった
+}
+
+ポイント
+- 検索済みの記録(visited)をメソッド内で用意することで、テスト間の影響をなくしました。
+- 「箱が空になるまで調べる」→「空なら終わる」。これで例外が出ません。
+- 候補は後ろに入れることで、横に広がる探し方になります。
+
+テスト結果（修正後）
+- BREADTH_FIRST_SEARCH_TEST > test1 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test2 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test3 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test4 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test5 PASSED
+
+合計: 実行 5、失敗 0、エラー 0
