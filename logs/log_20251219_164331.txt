@@ -1,0 +1,46 @@
+[ユーザー]: pem1006
+[日時]: 2025-12-19 16:43:31
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因
+・「まだ調べる場所があるか」を確かめずに、入れ物から取り出し続けているため、空っぽになった後も取り出そうとして落ちています（test3で発生）。
+
+最も重要な修正
+・無限に回る「while (true)」をやめて、「入れ物が空になるまで回す」ようにします。さらに、最後まで見つからなかったら「false」を返します。
+
+直し方（ポイントだけ）
+- ループ条件を while (!queue.isEmpty()) にする
+- ループの後ろに return false を追加する
+
+変更イメージ
+- 修正前
+  while (true) {
+      Node node = queue.removeFirst();
+      ...
+  }
+  // return false;（コメントアウトされている）
+
+- 修正後
+  while (!queue.isEmpty()) {
+      Node node = queue.removeFirst();
+      ...
+  }
+  return false;
+
+これで、調べる場所がなくなったら探索をやめて「見つからなかった」と正しく返すようになります。
+
+テスト結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
