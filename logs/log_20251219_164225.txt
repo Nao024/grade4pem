@@ -1,0 +1,80 @@
+[ユーザー]: pem1007
+[日時]: 2025-12-19 16:42:25
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 上級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を技術的に詳しく説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と最重要のエラー
+- 最重要のエラー: while(true) と queue.removeFirst() の組み合わせにより、到達不能ケースでキューが空になってもループが止まらず、空のデキューから removeFirst() を呼んで NoSuchElementException が発生していました（PEM の test3 失敗のスタックトレース通り）。
+  - 到達不能（パスが存在しない）場合は、探索用キューが空になった時点で探索終了し false を返す必要があります。
+
+修正方針
+- ループ条件を「キューが空でない間」に変更し、ループを抜けたら false を返す。
+- 幅優先探索として正しい順序になるように、後続ノードは queue.addLast(...) でエンキューする（現状の addFirst は実質スタック動作＝深さ優先になってしまう）。
+- 訪問済み集合は呼び出しごとにリセット（ローカル変数化）する。現状は static フィールドのため、テスト間で状態が汚染される潜在バグになります。
+
+修正コード例（BREADTH_FIRST_SEARCH.java）
+package java_programs;
+import java.util.*;
+import java.util.ArrayDeque;
+
+public class BREADTH_FIRST_SEARCH {
+
+    // 共有状態を持たないように削除（必要なら残しても良いが毎回clearが必要）
+    // public static Set<Node> nodesvisited = new HashSet<>();
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        // キューが空になるまで
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            // テストは同一インスタンスを渡しているため参照一致でOK
+            if (node == goalnode) {
+                return true;
+            }
+
+            for (Node successor_node : node.getSuccessors()) {
+                if (!visited.contains(successor_node)) {
+                    // 幅優先は末尾に追加
+                    queue.addLast(successor_node);
+                    visited.add(successor_node);
+                }
+            }
+        }
+
+        // 到達不能
+        return false;
+    }
+}
+
+技術的補足
+- while(true) は到達不能時の停止条件を欠落させる典型バグです。BFS/DFS の反復実装では「未処理ノードがなくなる＝探索完了」を停止条件にするのが基本です。
+- ArrayDeque.removeFirst() は空のとき例外を投げます。よって isEmpty() を先に確認することが重要です。
+- addFirst を addLast に変えることで正しい FIFO キューとなり、幅優先（最短辺数の経路探索）の性質が担保されます。今回のテストは経路の有無のみですが、幅優先を名乗る以上ここも正すのが妥当です。
+- 訪問済み集合の static はテスト間での状態リークを引き起こします。今回のテストデータでは致命的にはなりにくいものの、同じラベルのノードを再利用するケースでは誤判定の原因になります。メソッドローカルにするのが安全です。
+
+テスト結果（修正後）
+- test1: Path found! → 成功
+- test2: Path found! → 成功
+- test3: Path not found! → 成功（例外発生せず、期待通り false）
+- test4: Path found! → 成功
+- test5: Path found! → 成功
+
+全テストケースがパスします。
