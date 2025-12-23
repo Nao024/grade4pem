@@ -1,0 +1,59 @@
+[ユーザー]: pem1005
+[日時]: 2025-12-23 23:30:16
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+ポイント
+最重要の不具合は、while(true)でキューが空になった場合の終了条件がないことです。到達不可能なケースではキューが空になり、queue.removeFirst()がNoSuchElementExceptionを投げてテスト3で失敗しています（PEMのスタックトレース通り）。
+
+直し方（大学生向けの説明）
+- 幅優先探索(BFS)では「探索待ちのノードを置くキュー」が空になったら探索は終了です。したがって、ループ条件は「キューが空でない間」にする必要があります。
+- 目的ノードが見つからずにキューが空になった場合は、false（パスが見つからない）を返します。
+- これで無限ループや例外がなくなり、到達不可能な場合も正しくfalseを返せます。
+
+修正コード（メソッドのみ差し替え）
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+
+    nodesvisited.add(startnode);
+
+    // キューが空でない間だけ回す
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        } else {
+            for (Node successor_node : node.getSuccessors()) {
+                if (!nodesvisited.contains(successor_node)) {
+                    // BFSとしては末尾に追加するのが自然
+                    queue.addLast(successor_node);
+                    nodesvisited.add(successor_node);
+                }
+            }
+        }
+    }
+    // 見つからなかった
+    return false;
+}
+
+補足（任意の改善）
+- 探索ごとにnodesvisitedをクリアする（複数回呼び出すなら副作用を避けられます）。
+  例: メソッド冒頭で nodesvisited.clear(); を呼ぶ。
+- 後続ノードの追加はaddLastがBFSの正しい動作（元コードはaddFirstでDFS寄りの動きになります）。
+
+テスト結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
