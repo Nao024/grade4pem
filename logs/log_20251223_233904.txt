@@ -1,0 +1,63 @@
+[ユーザー]: pem1005
+[日時]: 2025-12-23 23:39:04
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下の3点を直すだけで、全テストが通ります。
+
+1) 空なのに取り出してエラーになる
+- 今は「ずっと回り続ける」書き方のまま、取り出す物が無くなっても取り出そうとしてエラーになっています（test3 の失敗原因）。
+- 直し方: 箱（調べ待ちの入れ物）が空でない間だけ回す。空になったら「道は無い」として false を返す。
+
+2) 入れる向きが逆
+- 次に調べる場所を「前」に入れているので、調べる順番が逆になっています。
+- 直し方: 次に調べる場所は「後ろ」に入れる。
+
+3) 訪れた場所のメモを検索ごとにリセットする
+- いまはクラス全体で共有のメモを使っています。テストの影響を避けるため、検索のたびに新しく用意します。
+
+修正内容（置き換え例）
+- フィールドは削除: public static Set<Node> nodesvisited = new HashSet<>();
+- メソッド breadth_first_search を次の内容に差し替え
+
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    Set<Node> visited = new HashSet<>();
+
+    queue.addLast(startnode);
+    visited.add(startnode);
+
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        }
+
+        for (Node successor_node : node.getSuccessors()) {
+            if (!visited.contains(successor_node)) {
+                queue.addLast(successor_node);   // 後ろに入れる
+                visited.add(successor_node);
+            }
+        }
+    }
+    return false;  // 空になった＝道が無い
+}
+
+テスト結果（修正後）
+- test1: Path found! → 成功
+- test2: Path found! → 成功
+- test3: Path not found! → 成功
+- test4: Path found! → 成功
+- test5: Path found! → 成功
+
+補足
+- もし startnode と goalnode が同じなら、最初の取り出しで true が返るので追加の特別処理は不要です。
