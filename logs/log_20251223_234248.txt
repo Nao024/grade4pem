@@ -1,0 +1,92 @@
+[ユーザー]: pem1005
+[日時]: 2025-12-23 23:42:48
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 中級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を大学生向けに説明してください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下では、テスト失敗の原因と修正方法を大学生向けに分かりやすく説明し、修正後コードと全テスト結果を示します。
+
+1. 失敗の原因
+- 無限ループ＋例外発生
+  - ループが while(true) になっており、探索キューが空になっても抜けません。その状態で queue.removeFirst() を呼ぶため、NoSuchElementException が発生します（test3 の失敗 PEM がこれ）。
+- 幅優先になっていない
+  - 後続ノードを queue.addFirst(...) でキューの先頭に入れており、実質的にスタック（深さ優先）っぽい動作になっています。幅優先探索では末尾に追加（addLast）します。
+- 訪問済み集合が static フィールド
+  - nodesvisited が static なので、テスト間で状態が残ります。JUnit は同一JVMで複数テストを実行するため、前のテストの訪問履歴が次のテストに影響する恐れがあります。
+
+2. 修正方針
+- ループ条件を「キューが空でない間」に変更する（while (!queue.isEmpty())）。
+- 後続ノードはキューの末尾に追加する（queue.addLast(...)）。これで正しい幅優先順序になる。
+- 訪問済み集合はメソッド内のローカル変数にする（テスト間の副作用を無くす）。
+- 探索が尽きたら false を返す（見つからなかった）。
+- 念のため、後続リストが null の場合にも落ちないように防御（null なら空扱い）。
+
+3. 修正後コード（BREADTH_FIRST_SEARCH.java）
+package java_programs;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode) {
+                return true;
+            }
+
+            List<Node> successors = node.getSuccessors();
+            if (successors == null) {
+                continue; // 後続が無ければ次へ
+            }
+
+            for (Node successor : successors) {
+                if (!visited.contains(successor)) {
+                    queue.addLast(successor); // 幅優先なので末尾に追加
+                    visited.add(successor);
+                }
+            }
+        }
+
+        // ここまで来たら到達できなかった
+        return false;
+    }
+}
+
+ポイント
+- static Set<Node> nodesvisited は削除し、visited をメソッド内で生成。
+- addFirst ではなく addLast を使用。
+- while(true) ではなく while(!queue.isEmpty()) に変更し、最後に return false を追加。
+
+4. 修正後のテスト結果
+各テストで boolean を "Path found!" / "Path not found!" に変換しているため、結果は以下の通りになります。
+
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+
+すべてのテストが期待通りに成功します（test3 の NoSuchElementException は解消）。
