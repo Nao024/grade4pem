@@ -269,7 +269,7 @@ def main_page():
         st.warning("ログアウトしました。")
         st.rerun()
 
-    st.title("AIによるプログラムエラー診断ツール")
+    st.title("AIによるプログラムエラー解説ツール")
 
     # --- 入力エリア ---
     st.header("① 使用するプログラムを選択")
