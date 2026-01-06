@@ -300,7 +300,7 @@ def main_page():
                     "中級": "大学生向けに説明してください。", "上級": "技術的に詳しく説明してください。"}
         target = audience[level]
 
-        prompt = f"{common}{target}説明してください。"
+        prompt = f"{common}{target}"
         if err == "１つだけ":
             prompt += "エラーが複数ある場合は、最も重要なものを1つ挙げてください。"
         elif err == "必要最低限":
