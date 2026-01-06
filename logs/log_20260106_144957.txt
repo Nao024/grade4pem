@@ -1,0 +1,97 @@
+[ユーザー]: g22923
+[日時]: 2026-01-06 14:49:57
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: できるだけたくさん
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を専門用語を使わずに説明してください。修正箇所をできるだけ多く挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+以下では、できるだけやさしい言葉で、直すべき点を具体的に挙げたうえで、直したコード例とテスト結果を示します。
+
+修正点（できるだけ多く）
+- 終わりのない回し続けにしない
+  - 今は「ずっと回す」になっていて、取り出すものが無くなると落ちてしまいます（test3 の例外の原因）。
+  - 「まだ残りがある間だけ回す」に変え、残りが無くなったら「見つからなかった」と返します。
+- 入れる順と取り出す順をそろえる
+  - 今は手前に足して手前から取り出していて、さっき足したものが先に処理されます。
+  - 幅広く探すには、後ろに足して手前から取り出すようにします。
+- 訪ねた場所のメモを毎回新しくする
+  - 今はクラス全体で共有のメモを使っていて、前の検索結果が次の検索に残ってしまいます（テストが連続すると悪影響）。
+  - 方法の中で新しく用意し、検索ごとにリセットされるようにします。
+- はじめと目標が同じならすぐ終わる
+  - 最初に同じかどうかを見て、同じなら「見つかった」と返します。
+- つながりの一覧が無いときにも落ちないようにする
+  - つながりが無い場合（null）のときは飛ばすようにします。
+-（おまけ）同じ物かどうかの比べ方
+  - 参照そのものの比較だけでなく、同じ名前などで同一と見なすこともあるので、equals でも比べます。
+-（おまけ）不要な import を整理
+  - 二重の import は片方にまとめられます（動作には影響なし）。
+
+直したコード例
+package java_programs;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        // 入力の軽い見張り
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+        if (startnode == goalnode || startnode.equals(goalnode)) {
+            return true;
+        }
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        // 残りがある間だけ回す
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode || node.equals(goalnode)) {
+                return true;
+            }
+
+            List<Node> successors = node.getSuccessors();
+            if (successors == null) {
+                continue; // つながりが無ければ次へ
+            }
+
+            for (Node next : successors) {
+                if (!visited.contains(next)) {
+                    // 後ろに足す（入れた順で処理される）
+                    queue.addLast(next);
+                    visited.add(next);
+                }
+            }
+        }
+
+        // ここまで来たら見つからなかった
+        return false;
+    }
+}
+
+テストケースの結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+
+補足
+- 今回の落ち（NoSuchElementException）は、「取り出すものが無いのに取り出そうとした」ことが原因です。上の修正で「残りがある間だけ回す」にしたので解消されます。
+- 共有のメモ（static な visited）をやめたことで、テストを続けて実行しても互いに影響しなくなります。
