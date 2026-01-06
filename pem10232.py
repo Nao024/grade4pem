@@ -289,7 +289,7 @@ def main_page():
     # --- 条件選択 ---
     st.header("② 条件を選択")
     #test_opt = st.radio("テストケースの有無", ["あり", "なし"], horizontal=True)
-    error_opt = st.selectbox("指摘するエラー数", ["１つだけ", "できるだけたくさん", "指定なし"])
+    error_opt = st.selectbox("指摘するエラー数", ["１つだけ", "必要最低限", "できるだけたくさん", "指定なし"])
     level_opt = st.radio("解説レベル", ["初級", "中級", "上級"], horizontal=True)
 
     # --- プロンプト生成 ---
@@ -301,6 +301,8 @@ def main_page():
         prompt = f"{common}{target}説明してください。"
         if err == "１つだけ":
             prompt += "エラーが複数ある場合は、最も重要なものを1つ挙げてください。"
+        elif err == "必要最低限":
+            prompt += "エラーが複数ある場合は、テストケースの通過に必要な最低限のエラーを挙げてください。"
         elif err == "できるだけたくさん":
             prompt += "修正箇所をできるだけ多く挙げてください。"
         prompt += "テストケースの結果も全て表示してください。"
