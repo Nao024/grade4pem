@@ -1,0 +1,86 @@
+[ユーザー]: pem1005
+[日時]: 2026-01-15 23:57:47
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングの基礎構文を理解している人に説明してください。エラーが起きた原因とその修正理由を教えてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+問題点の整理
+- 例外発生の原因（PEMの内容）
+  - while(true) のままキューが空になってもループを抜けず、queue.removeFirst() が空のキューから要素を取り出そうとして NoSuchElementException が投げられます。テスト3（到達不能ケース）で確実に起きます。
+- アルゴリズム上の不備
+  - 幅優先探索なのに、子ノードを queue.addFirst(...) で前側に積んでいるため、実質スタック（深さ優先探索）になっています。テストはたまたま通ることが多いですが、本来は後ろに積むべきです。
+- 設計上の不備
+  - 訪問済み集合 nodesvisited が static フィールドで、呼び出し間で内容が持ち越されます。テストのように別グラフを何度も探索する場合に副作用の原因になります（今回は主因ではないが潜在バグ）。
+
+修正方針
+- ループ条件を「キューが空でない間」にする。
+- ループを抜けたら false を返す。
+- 子ノードはキューの末尾へ追加する（addLast）。
+- 訪問済み集合は探索ごとのローカル変数にする（もしくは毎回クリアする）。安全のためローカルにします。
+- 目標判定は equals を使うとより汎用的です（== でも今回のテストは通りますが、equals の方が Node 実装に依存しにくい）。
+
+修正後のコード（該当メソッド）
+package java_programs;
+import java.util.*;
+import java.util.ArrayDeque;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        if (startnode == null || goalnode == null) {
+            return false;
+        }
+
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node.equals(goalnode)) {
+                return true;
+            } else {
+                for (Node successor_node : node.getSuccessors()) {
+                    if (!visited.contains(successor_node)) {
+                        queue.addLast(successor_node);   // 幅優先なので末尾に追加
+                        visited.add(successor_node);
+                    }
+                }
+            }
+        }
+
+        // 探し切っても見つからなかった
+        return false;
+    }
+}
+
+各修正の理由
+- while(true) を while(!queue.isEmpty()) に
+  - 空のとき removeFirst が例外になるのを防ぎ、「探索する候補がなくなったら終了」という正しい終了条件になります。
+- return false を末尾に追加
+  - 目標に到達できなかったケースを正しく false で返します。
+- addFirst を addLast に変更
+  - BFS は先に入れたものから取り出すキュー構造（FIFO）で次レベルへ広がる探索です。前に積むと DFS 的な順序になってしまいます。
+- visited をメソッド内のローカル変数に
+  - 呼び出しごとに独立した探索となり、テストケース間での副作用を防ぎます。
+- equals を使用
+  - ノードの同一性判定が参照同一性ではなく「ノード定義における同値性」で行われ、Node の実装に対して堅牢です。
+
+テスト結果（期待される出力）
+- Case 1: Path found!
+- Case 2: Path found!
+- Case 3: Path not found!
+- Case 4: Path found!
+- Case 5: Path found!
+
+例外は発生せず、すべてのアサーションが成功します。
