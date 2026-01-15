@@ -1,0 +1,75 @@
+[ユーザー]: pem1006
+[日時]: 2026-01-15 21:16:12
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 必要最低限
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングの基礎構文を理解している人に説明してください。エラーが起きた原因とその修正理由を教えてください。エラーが複数ある場合は、テストケースの通過に必要な最低限のエラーを挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因
+- 無限ループ＋空キュー参照
+  - ループ条件が while(true) のため、到達不能な場合でもループを抜けません。
+  - 到達不能ケース（test3）では、探索キューが空になった後も queue.removeFirst() を呼び続け、NoSuchElementException が発生します（PEMのスタックトレース通り）。
+- 挙動の不一致（任意だが推奨）
+  - 後続ノードを queue.addFirst(...) に入れており、FIFO ではなく LIFO に近い動作になります。到達可否には影響しにくいですが、幅優先探索の本来の仕様ではキューの末尾に追加（addLast）します。
+
+最小修正（テスト通過に必要なもの）
+1) while(true) を while(!queue.isEmpty()) に変更する
+2) ループ終了後に return false; を追加する
+
+推奨修正（アルゴリズムの正しさ・再実行性の向上）
+- 後続ノードの追加を addFirst → addLast に変更（FIFO）
+- 静的な訪問済み集合 nodesvisited をメソッド冒頭でクリア（連続実行時の状態リーク防止）
+
+修正後コード例（推奨修正を含む）
+package java_programs;
+import java.util.*;
+import java.util.ArrayDeque;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static Set<Node> nodesvisited = new HashSet<>();
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        Deque<Node> queue = new ArrayDeque<>();
+        nodesvisited.clear(); // 任意だが推奨（テスト安定化）
+
+        queue.addLast(startnode);
+        nodesvisited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode) {
+                return true;
+            } else {
+                for (Node successor_node : node.getSuccessors()) {
+                    if (!nodesvisited.contains(successor_node)) {
+                        queue.addLast(successor_node); // FIFO（幅優先）
+                        nodesvisited.add(successor_node);
+                    }
+                }
+            }
+        }
+        return false; // 到達不能
+    }
+}
+
+修正理由の要点
+- キューが空になったら探索をやめるのが幅優先探索の基本。空なのに取り出すと例外になるため、終了条件をキュー非空にする必要があります。
+- 到達できなかったときは false を返す必要があります。これがないと「到達不能ケース」の合否判定ができません。
+- FIFO キュー運用（addLast）にすることで、本来のBFSの順序で探索されます。
+
+テストケース結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+
+全テストケースが成功します。
