@@ -1,0 +1,62 @@
+[ユーザー]: pem1006
+[日時]: 2026-01-15 20:50:56
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングの基礎構文を理解している人に説明してください。エラーが起きた原因とその修正理由を教えてください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因
+- 問題の本質は、探索用キューが空になった後も while(true) で removeFirst() を呼び続けていることです。到達不可能なケース（test3）ではキューが空になり、ArrayDeque.removeFirst() が NoSuchElementException を投げます。
+- BFS は「探索候補（キュー）が尽きたら終了（= 到達不可）」と判定する必要がありますが、その判定がありません。
+
+修正方針（最重要の修正1点）
+- ループ条件を while(!queue.isEmpty()) に変更し、ループを抜けたら false を返すようにします。これで「候補が尽きたら到達不可」と安全に終了できます。
+
+修正コード（差分イメージ）
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+
+    nodesvisited.add(startnode);
+
+    // while(true) から変更
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        } else {
+            for (Node successor_node : node.getSuccessors()) {
+                if (!nodesvisited.contains(successor_node)) {
+                    // 本来の BFS のキュー運用として addLast が自然ですが、
+                    // 到達可否には影響しません。どちらでも可。
+                    queue.addLast(successor_node);
+                    nodesvisited.add(successor_node);
+                }
+            }
+        }
+    }
+    // 候補が尽きた => 到達不可
+    return false;
+}
+
+なぜこれで直るのか
+- 到達不可のときは探索候補がなくなる（= キューが空）ので、そこで探索を打ち切って false を返せば、例外も無限ループも発生しません。
+- また、BFS の正しい終了条件（候補が尽きたら到達不可）を満たす実装になります。
+
+参考（補足）
+- addFirst では深さ優先的な順番になります。到達可否の正しさには影響しませんが、BFS としては addLast のほうが自然なので上記では addLast に統一しています。
+- nodesvisited が static である点はテスト構成上は問題化しません（各テストで別インスタンスを使っているため）が、実運用ではメソッド内ローカルにするか、呼び出し毎にクリアするほうが安全です。
+
+テスト結果（修正後）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
