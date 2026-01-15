@@ -1,0 +1,64 @@
+[ユーザー]: pem1006
+[日時]: 2026-01-15 20:35:16
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: １つだけ
+[解説レベル]: 入門
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングを学び始めたばかりの人に説明してください。専門用語を使わずに、どこをどのように修正すればいいのかを教えてください。手順を簡潔に書いてください。エラーが複数ある場合は、最も重要なものを1つ挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+ポイントだけ簡単に説明します。専門用語はできるだけ使いません。
+
+何が問題か（一番大事な点）
+- 道が見つからない場合でも、ずっと「取り出し続ける」動きになっており、調べる場所が空なのに取り出そうとしてエラーになっています（test3 の失敗の原因）。
+  - while(true) のまま queue.removeFirst() を呼ぶと、中身が空のときに失敗します。
+
+直し方（手順）
+1) 繰り返しの条件を直す
+- while(true) を while(!queue.isEmpty()) に変えます。
+- ループの後ろに return false; を追加します（道がなかったときに「見つからない」と返すため）。
+
+2) 次に調べる場所の入れ方を直す
+- queue.addFirst(successor_node) を queue.addLast(successor_node) に変えます。
+  - 後ろに足して、前から取り出す動きにします（正しい幅優先になります）。
+
+3) 訪ねた印のリセット
+- メソッドの最初で nodesvisited.clear() を呼び、毎回まっさらから始めます。
+  - これを入れないと、前のテストの記録が残って次のテストに影響します。
+
+変更後のメソッド全体（置き換えてください）
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    nodesvisited.clear(); // 追加：毎回リセット
+
+    queue.addLast(startnode);
+    nodesvisited.add(startnode);
+
+    while (!queue.isEmpty()) { // 修正：空でない間だけ繰り返す
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        }
+
+        for (Node successor_node : node.getSuccessors()) {
+            if (!nodesvisited.contains(successor_node)) {
+                queue.addLast(successor_node); // 修正：前ではなく後ろに入れる
+                nodesvisited.add(successor_node);
+            }
+        }
+    }
+    return false; // 追加：見つからなかった
+}
+
+テスト結果（修正後の期待値）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+- すべてのテストが成功します。
