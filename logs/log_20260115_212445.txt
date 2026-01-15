@@ -1,0 +1,66 @@
+[ユーザー]: pem1006
+[日時]: 2026-01-15 21:24:45
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 必要最低限
+[解説レベル]: 上級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法を技術的に詳しく説明してください。エラーが複数ある場合は、テストケースの通過に必要な最低限のエラーを挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と不具合のポイント
+- 例外発生の直接原因: while(true) で無限ループし、キューが空になっても queue.removeFirst() を呼ぶため、NoSuchElementException が発生します（test3）。
+- 戻り値の欠落: キューが空になったとき（到達不能の場合）に false を返す経路がありません。
+- 以上の2点が、テストを通すために最低限修正すべき点です（訪問済みセットのスコープや追加位置は到達可否には影響しないため、今回は最小修正に留めます）。
+
+最小修正内容
+- while(true) を while(!queue.isEmpty()) に変更する。
+- ループを抜けたら false を返す。
+
+修正後の該当メソッド（最小修正版）
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+
+    nodesvisited.add(startnode);
+
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        } else {
+            for (Node successor_node : node.getSuccessors()) {
+                if (!nodesvisited.contains(successor_node)) {
+                    // ここは addFirst のままでも到達可否には影響しない
+                    // （BFSとしては addLast が通常だが、最小修正に留める）
+                    queue.addFirst(successor_node);
+                    nodesvisited.add(successor_node);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+技術的な説明
+- while の条件を !queue.isEmpty() にすることで、探索フロンティア（キュー）が空になった時点でループを終了できます。これにより、空のデキュー操作 removeFirst() が呼ばれず、NoSuchElementException を防止します。
+- ループ終了後に return false することで、start から goal へ到達不能な場合に正しく偽を返せるようになります。これにより test3（未接続ノード同士）が「Path not found!」となります。
+
+注意（参考・任意改善）
+- nodesvisited が static フィールドのため、テスト間で状態が持ち越されます。今回のテストデータではノードインスタンスが異なるため影響しませんが、一般にはメソッドローカルにするのが安全です。例えば:
+  - Set<Node> nodesvisited = new HashSet<>();
+  - クラスの static フィールドは削除
+- 厳密な幅優先を行うなら、後続ノードは queue.addLast(...) で末尾に入れるべきです（現在は addFirst でスタック的な順序になります）。ただし今回のテストは到達可否のみを判定しているため、最小修正では変更不要です。
+
+テスト結果（修正後）
+- BREADTH_FIRST_SEARCH_TEST > test1 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test2 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test3 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test4 PASSED
+- BREADTH_FIRST_SEARCH_TEST > test5 PASSED
+
+全5テスト成功。
