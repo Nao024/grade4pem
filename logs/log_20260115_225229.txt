@@ -1,0 +1,65 @@
+[ユーザー]: pem1005
+[日時]: 2026-01-15 22:52:29
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 必要最低限
+[解説レベル]: 入門
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングを学び始めたばかりの人に説明してください。専門用語を使わずに、どこをどのように修正すればいいのかを教えてください。手順を簡潔に書いてください。エラーが複数ある場合は、テストケースの通過に必要な最低限のエラーを挙げてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+やること（最小限の修正だけ）
+
+1) キューが空になったら探索を終えるようにする
+- 変更前: while (true) {
+- 変更後: while (!queue.isEmpty()) {
+
+2) 見つからなかった場合に false を返す
+- while の直後に return false; を追加する（コメントアウトされている行を復活させるか、新しく書く）
+
+なぜ落ちていたか（やさしく）
+- 探す相手が見つからないケース（test3）では、キューが空になるのに、無限ループのまま queue.removeFirst() を呼び続けていました。
+- 空のキューから取り出そうとして例外（NoSuchElementException）が出ていました。
+- 「空になったらやめる」と「見つからなかったら false」を入れれば解決します。
+
+直す場所（完成形のメソッド）
+
+BREADTH_FIRST_SEARCH.java の breadth_first_search メソッド全体を次のようにしてください（必要最小限の変更のみ。addFirst はそのままにしています）。
+
+public static boolean breadth_first_search(Node startnode, Node goalnode) {
+    Deque<Node> queue = new ArrayDeque<>();
+    queue.addLast(startnode);
+
+    nodesvisited.add(startnode);
+
+    while (!queue.isEmpty()) {
+        Node node = queue.removeFirst();
+
+        if (node == goalnode) {
+            return true;
+        } else {
+            for (Node successor_node : node.getSuccessors()) {
+                if (!nodesvisited.contains(successor_node)) {
+                    queue.addFirst(successor_node);
+                    nodesvisited.add(successor_node);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+補足（任意の改善。今回はテスト通過に不要）
+- 本来の幅優先らしくするなら、queue.addFirst(...) ではなく queue.addLast(...) を使うと良いです。
+- 複数回呼ぶなら、メソッドの最初で nodesvisited.clear() をするか、nodesvisited をメソッド内のローカル変数にすると安全です。
+
+テスト結果（修正後）
+
+- Case 1: Path found!
+- Case 2: Path found!
+- Case 3: Path not found!
+- Case 4: Path found!
+- Case 5: Path found!
