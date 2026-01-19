@@ -1,0 +1,80 @@
+[ユーザー]: pem1007
+[日時]: 2026-01-19 18:17:42
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 入門
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングを学び始めたばかりの人に説明してください。専門用語を使わずに、どこをどのように修正すればいいのかを教えてください。手順を簡潔に書いてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+やることは3つです。
+- キューが空になったらやめるようにする
+- 後ろに追加して「幅優先」になるようにする
+- 訪れたノードの記録は毎回リセットする
+
+修正手順（上から順に直してください）
+1) クラスの一番上にある次の1行を削除します。
+- public static Set<Node> nodesvisited = new HashSet<>();
+
+2) メソッドの先頭で、訪れたノード用の入れ物を作ります（毎回リセットされます）。
+- Set<Node> nodesvisited = new HashSet<>();
+
+3) ずっと回り続ける while(true) を、キューが空でない間だけ回すように直します。
+- while (true) → while (!queue.isEmpty())
+
+4) 次に見るノードをキューの「前」ではなく「後ろ」に入れるように直します。
+- queue.addFirst(successor_node); → queue.addLast(successor_node);
+
+5) ループを抜けたら、見つからなかったと返す行を追加します。
+- return false;
+
+完成コード（置き換えてください）
+package java_programs;
+import java.util.*;
+import java.util.ArrayDeque;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        Deque<Node> queue = new ArrayDeque<>();
+        Set<Node> nodesvisited = new HashSet<>();
+
+        queue.addLast(startnode);
+        nodesvisited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode) {
+                return true;
+            } else {
+                for (Node successor_node : node.getSuccessors()) {
+                    if (!nodesvisited.contains(successor_node)) {
+                        queue.addLast(successor_node);
+                        nodesvisited.add(successor_node);
+                    }
+                }
+            }
+        }
+        return false;
+    }
+}
+
+なぜ直るか（短く）
+- キューが空のときに取り出そうとして落ちていたのを防ぎます（test3のエラー解消）。
+- 見つからなかったときに false を返せるようになります。
+- 後ろに追加することで、正しい「幅優先」になります。
+- 訪問済みの記録が呼び出しごとにリセットされ、テスト間で影響しません。
+
+テストケース結果（修正後）
+- test1: Path found! → PASS
+- test2: Path found! → PASS
+- test3: Path not found! → PASS
+- test4: Path found! → PASS
+- test5: Path found! → PASS
+
+すべてのテストが成功します。
