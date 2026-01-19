@@ -1,0 +1,70 @@
+[ユーザー]: pem1007
+[日時]: 2026-01-19 18:18:56
+
+=== 入力情報 ===
+[プログラム]: BREADTH_FIRST_SEARCH.java
+[テスト]: BREADTH_FIRST_SEARCH_TEST.java
+[PEM]: BREADTH_FIRST_SEARCH_pem.txt
+[エラー数指定]: 指定なし
+[解説レベル]: 初級
+=== プロンプト ===
+次のプログラムについて、テストケースが成功するようにエラーの修正方法をプログラミングの基礎構文を理解している人に説明してください。エラーが起きた原因とその修正理由を教えてください。テストケースの結果も全て表示してください。
+
+=== 解析結果 ===
+原因と直し方の要点
+- 例外発生の原因:
+  - ループが while(true) のままなので、探索でキューが空になってもループを抜けません。
+  - キューが空の状態で queue.removeFirst() を呼ぶと、NoSuchElementException が発生します（テスト3の失敗がこれ）。
+- 併せて直すべき不具合:
+  - 後続ノードをキューに入れるときに addFirst を使っており、実質スタック（深さ優先探索）になっています。幅優先探索なら addLast でFIFOにすべきです。
+  - 訪問済み集合 nodesvisited が static フィールドで、呼び出し間で状態が残ります。テストの独立性や副作用回避のため、メソッド内のローカル変数にすべきです。
+
+修正理由
+- while(!queue.isEmpty()) にして、探索が尽きたら false を返すことで「到達不能」ケースを正しく処理し、例外を防ぎます。
+- addLast で後続ノードを末尾に入れることで、幅優先の探索順（層ごと）になります。
+- 訪問済み集合をメソッドローカルにすることで、毎回クリーンな状態で探索でき、テスト間の状態混入を防げます。
+
+修正コード（BREADTH_FIRST_SEARCH.java）
+package java_programs;
+import java.util.Deque;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Set;
+
+public class BREADTH_FIRST_SEARCH {
+
+    public static boolean breadth_first_search(Node startnode, Node goalnode) {
+        Set<Node> visited = new HashSet<>();
+        Deque<Node> queue = new ArrayDeque<>();
+
+        queue.addLast(startnode);
+        visited.add(startnode);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.removeFirst();
+
+            if (node == goalnode) { // テストは同一インスタンス比較なので参照比較でOK
+                return true;
+            }
+
+            for (Node successor_node : node.getSuccessors()) {
+                if (!visited.contains(successor_node)) {
+                    queue.addLast(successor_node); // 幅優先は末尾に追加
+                    visited.add(successor_node);
+                }
+            }
+        }
+
+        return false; // 到達不能
+    }
+}
+
+テスト実行結果（期待される出力）
+- test1: Path found!
+- test2: Path found!
+- test3: Path not found!
+- test4: Path found!
+- test5: Path found!
+
+補足
+- 参照比較(node == goalnode)は、テストが同一ノードインスタンスを渡しているため問題ありません。ノード名などの論理同値で判定したい場合は Node#equals/hashCode の実装に合わせて node.equals(goalnode) を使います。
